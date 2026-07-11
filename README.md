@@ -67,17 +67,19 @@ Global schedule is configured at **Settings** (`/settings`):
 - Primary and secondary times (HH:mm)
 - Timezone (global, not per product)
 
-**How it works:** Vercel Cron hits `/api/cron/scrape-all` every hour (`vercel.json`). The route checks whether the current time in your configured timezone matches a schedule slot (±5 min). If yes, it scrapes all products via the existing scrape pipeline.
+**How it works:** A GitHub Actions workflow (`.github/workflows/cron-scrape.yml`) hits `/api/cron/scrape-all` every hour. The route checks whether the current time in your configured timezone matches a schedule slot (±5 min). If yes, it scrapes all products via the existing scrape pipeline.
 
 For local testing of batch scrape, use **Run all now** on the Settings page (`POST /api/products/scrape-all`).
 
-### Vercel deployment
+### GitHub Actions setup
 
-1. Set `CRON_SECRET` in Vercel project environment variables
-2. Deploy — `vercel.json` registers the hourly cron job
-3. Vercel sends `Authorization: Bearer ${CRON_SECRET}` when invoking cron routes (configure in Vercel dashboard if needed)
+1. Set `CRON_SECRET` in Vercel project environment variables (same value the app verifies)
+2. In the GitHub repo, add Actions secrets:
+   - `APP_URL` — production URL, e.g. `https://stalq-lite.vercel.app`
+   - `CRON_SECRET` — same value as on Vercel
+3. Push the workflow file — scheduled runs start automatically (UTC). Use **Actions → Scheduled scrape → Run workflow** to test manually.
 
-External cron services (e.g. cron-job.org) can also call `GET /api/cron/scrape-all` hourly with the same Bearer header.
+Note: GitHub schedule triggers can be a few minutes late under load; keep schedule times aligned to the hour when possible.
 
 After pulling this update, run migrations to add `schedule_settings`:
 

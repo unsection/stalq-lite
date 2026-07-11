@@ -1,0 +1,26 @@
+name: Scheduled scrape
+
+on:
+  schedule:
+    # Hourly — app decides whether the configured schedule slot matches (±5 min).
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Trigger scrape cron
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "Missing required secrets: APP_URL and/or CRON_SECRET"
+            exit 1
+          fi
+
+          curl -fsS --max-time 300 \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${APP_URL%/}/api/cron/scrape-all"
