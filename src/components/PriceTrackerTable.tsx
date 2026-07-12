@@ -7,14 +7,20 @@ import {
   ArrowSquareOut,
   ArrowUpRight,
   ArrowsClockwise,
-  Minus,
+  DotsThree,
+  Eye,
+  Trash,
 } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { TrackerProduct } from "@/lib/pricing/getDashboardData";
-import { Button } from "@/components/ui/Button";
-import { PriceSparkline } from "@/components/PriceSparkline";
-import { cn, formatPrice } from "@/lib/utils";
+import {
+  cn,
+  formatPrice,
+  getFaviconUrl,
+  mockInStock,
+  mockMarginPercent,
+} from "@/lib/utils";
 
 type PriceTrackerTableProps = {
   products: TrackerProduct[];
@@ -22,28 +28,17 @@ type PriceTrackerTableProps = {
 
 type SortKey = "name" | "price" | "change" | "lastScraped";
 
-const MovementBadge = ({
+const PriceChange = ({
   direction,
   change,
-  changePercent,
   currency,
 }: {
   direction: TrackerProduct["movement"]["direction"];
   change: number | null;
-  changePercent: number | null;
   currency: string;
 }) => {
-  if (direction === "unknown" || change == null) {
-    return <span className="text-zinc-600">—</span>;
-  }
-
-  if (direction === "flat") {
-    return (
-      <span className="inline-flex items-center gap-1 text-zinc-500">
-        <Minus className="h-3.5 w-3.5" />
-        <span className="num text-xs">0%</span>
-      </span>
-    );
+  if (direction === "unknown" || direction === "flat" || change == null || change === 0) {
+    return null;
   }
 
   const isDown = direction === "down";
@@ -52,27 +47,201 @@ const MovementBadge = ({
   const sign = change > 0 ? "+" : "";
 
   return (
-    <div className={cn("inline-flex flex-col items-end gap-0.5", color)}>
-      <span className="inline-flex items-center gap-1 font-medium">
-        <Icon className="h-3.5 w-3.5" />
-        <span className="num text-sm">
-          {sign}
-          {formatPrice(Math.abs(change), currency)}
-        </span>
+    <span className={cn("inline-flex items-center gap-1 text-sm font-medium", color)}>
+      <Icon className="h-4 w-4" weight="bold" />
+      <span className="num">
+        {sign}
+        {formatPrice(Math.abs(change), currency)}
       </span>
-      {changePercent != null ? (
-        <span className="num text-xs opacity-80">
-          {sign}
-          {Math.abs(changePercent).toFixed(1)}%
+    </span>
+  );
+};
+
+const menuItemClass =
+  "flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-800 disabled:opacity-50";
+
+const ProductCard = ({
+  product,
+  isScraping,
+  isDeleting,
+  onScrape,
+  onDelete,
+}: {
+  product: TrackerProduct;
+  isScraping: boolean;
+  isDeleting: boolean;
+  onScrape: (productId: string) => void;
+  onDelete: (productId: string) => void;
+}) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const { movement } = product;
+  const currency = product.currency ?? "USD";
+  const margin = mockMarginPercent(product.id);
+  const inStock = mockInStock(product.id);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [menuOpen]);
+
+  const handleScrapeClick = () => {
+    setMenuOpen(false);
+    onScrape(product.id);
+  };
+
+  const handleDeleteClick = () => {
+    setMenuOpen(false);
+    onDelete(product.id);
+  };
+
+  return (
+    <article className="flex flex-col rounded-xl bg-zinc-900 p-4 transition-colors hover:bg-zinc-900/80">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-800">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={getFaviconUrl(product.domain)}
+            alt=""
+            width={24}
+            height={24}
+            className="h-6 w-6"
+            loading="lazy"
+          />
+        </div>
+
+        <div className="min-w-0 flex-1 leading-none">
+          <Link
+            href={`/products/${product.id}`}
+            className="line-clamp-1 font-medium leading-none text-white hover:underline"
+          >
+            {product.name}
+          </Link>
+          <p className="truncate text-xs leading-none text-zinc-500">{product.domain}</p>
+        </div>
+
+        <div className="relative shrink-0" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => setMenuOpen((open) => !open)}
+            className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
+            aria-label={`Actions for ${product.name}`}
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+          >
+            <DotsThree className="h-5 w-5" weight="bold" />
+          </button>
+
+          {menuOpen ? (
+            <div
+              role="menu"
+              className="absolute right-0 z-10 mt-1 w-48 overflow-hidden rounded-xl bg-zinc-950 py-1.5 shadow-xl shadow-black/40"
+            >
+              <Link
+                href={`/products/${product.id}`}
+                role="menuitem"
+                className={menuItemClass}
+                onClick={() => setMenuOpen(false)}
+              >
+                <Eye className="h-4 w-4 shrink-0" />
+                View Details
+              </Link>
+              <a
+                href={product.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                role="menuitem"
+                className={menuItemClass}
+                onClick={() => setMenuOpen(false)}
+              >
+                <ArrowSquareOut className="h-4 w-4 shrink-0" />
+                Visit
+              </a>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={handleScrapeClick}
+                disabled={isScraping}
+                className={menuItemClass}
+              >
+                <ArrowsClockwise
+                  className={cn("h-4 w-4 shrink-0", isScraping && "animate-spin")}
+                />
+                {isScraping ? "Refreshing…" : "Refresh"}
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={handleDeleteClick}
+                disabled={isDeleting}
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-red-400 hover:bg-zinc-800 disabled:opacity-50"
+              >
+                <Trash className="h-4 w-4 shrink-0" />
+                {isDeleting ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="mt-5 flex items-baseline gap-2.5">
+        <p className="num text-2xl font-semibold tracking-tight text-white">
+          {formatPrice(movement.current, currency)}
+        </p>
+        <PriceChange
+          direction={movement.direction}
+          change={movement.change}
+          currency={currency}
+        />
+      </div>
+
+      <p className="mt-2">
+        <span className="inline-flex rounded-full bg-emerald-950/80 px-2.5 py-1 text-xs font-medium text-emerald-400 ring-1 ring-inset ring-emerald-900/60">
+          {margin.toFixed(1)}% margin at their price
         </span>
-      ) : null}
-    </div>
+      </p>
+
+      <div className="mt-4 flex items-center justify-between gap-3 border-t border-zinc-800 pt-3">
+        <span
+          className={cn(
+            "inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset",
+            inStock
+              ? "bg-zinc-800 text-zinc-300 ring-zinc-700"
+              : "bg-red-950/50 text-red-400 ring-red-900/50",
+          )}
+        >
+          {inStock ? "In stock" : "Out of stock"}
+        </span>
+        <span className="truncate text-xs text-zinc-600">
+          {product.lastScrapedAt
+            ? formatDistanceToNow(new Date(product.lastScrapedAt), { addSuffix: true })
+            : "Never checked"}
+        </span>
+      </div>
+    </article>
   );
 };
 
 export const PriceTrackerTable = ({ products }: PriceTrackerTableProps) => {
   const router = useRouter();
   const [scrapingId, setScrapingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("change");
   const [sortAsc, setSortAsc] = useState(false);
 
@@ -92,13 +261,26 @@ export const PriceTrackerTable = ({ products }: PriceTrackerTableProps) => {
     }
   };
 
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) {
-      setSortAsc((value) => !value);
-      return;
+  const handleDelete = async (productId: string) => {
+    if (!confirm("Delete this product and all scrape history?")) return;
+    setDeletingId(productId);
+    try {
+      const response = await fetch(`/api/products/${productId}`, { method: "DELETE" });
+      if (!response.ok) {
+        throw new Error("Failed to delete product");
+      }
+      router.refresh();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Delete failed");
+    } finally {
+      setDeletingId(null);
     }
+  };
+
+  const handleSortChange = (value: string) => {
+    const [key, direction] = value.split(":") as [SortKey, "asc" | "desc"];
     setSortKey(key);
-    setSortAsc(key === "name");
+    setSortAsc(direction === "asc");
   };
 
   const sortedProducts = useMemo(() => {
@@ -128,7 +310,7 @@ export const PriceTrackerTable = ({ products }: PriceTrackerTableProps) => {
 
   if (products.length === 0) {
     return (
-      <div className="rounded-lg border border-zinc-900 bg-zinc-950 px-6 py-16 text-center">
+      <div className="rounded-xl border border-zinc-900 bg-zinc-950 px-6 py-16 text-center">
         <h2 className="text-lg font-medium text-white">No products tracked yet</h2>
         <p className="mt-2 text-sm text-zinc-500">
           Add product URLs to start monitoring price movement.
@@ -143,118 +325,44 @@ export const PriceTrackerTable = ({ products }: PriceTrackerTableProps) => {
     );
   }
 
-  const SortHeader = ({ label, column }: { label: string; column: SortKey }) => (
-    <button
-      type="button"
-      onClick={() => handleSort(column)}
-      className="font-medium hover:text-zinc-300"
-    >
-      {label}
-      {sortKey === column ? (sortAsc ? " ↑" : " ↓") : ""}
-    </button>
-  );
+  const sortValue = `${sortKey}:${sortAsc ? "asc" : "desc"}`;
 
   return (
-    <div className="overflow-hidden rounded-lg border border-zinc-900">
-      <table className="w-full text-sm">
-        <thead className="border-b border-zinc-900 bg-zinc-950 text-left text-zinc-500">
-          <tr>
-            <th className="px-4 py-3">
-              <SortHeader label="Product" column="name" />
-            </th>
-            <th className="px-4 py-3 text-right">
-              <SortHeader label="Price" column="price" />
-            </th>
-            <th className="px-4 py-3 text-right">
-              <SortHeader label="Change" column="change" />
-            </th>
-            <th className="px-4 py-3">Trend</th>
-            <th className="px-4 py-3 text-right">Low</th>
-            <th className="px-4 py-3 text-right">High</th>
-            <th className="px-4 py-3">
-              <SortHeader label="Last checked" column="lastScraped" />
-            </th>
-            <th className="px-4 py-3 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sortedProducts.map((product) => {
-            const { movement } = product;
-            const currency = product.currency ?? "USD";
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-zinc-500">
+          {products.length} product{products.length === 1 ? "" : "s"}
+        </p>
+        <label className="flex items-center gap-2 text-sm text-zinc-500">
+          <span className="sr-only">Sort by</span>
+          <select
+            value={sortValue}
+            onChange={(event) => handleSortChange(event.target.value)}
+            className="rounded-md border border-zinc-800 bg-zinc-950 px-2.5 py-1.5 text-sm text-zinc-300 outline-none hover:border-zinc-700 focus:border-zinc-600"
+            aria-label="Sort products"
+          >
+            <option value="change:desc">Biggest change</option>
+            <option value="change:asc">Smallest change</option>
+            <option value="price:desc">Price high → low</option>
+            <option value="price:asc">Price low → high</option>
+            <option value="name:asc">Name A → Z</option>
+            <option value="lastScraped:desc">Recently checked</option>
+          </select>
+        </label>
+      </div>
 
-            return (
-              <tr
-                key={product.id}
-                className="border-b border-zinc-900/80 hover:bg-zinc-950/60"
-              >
-                <td className="px-4 py-3">
-                  <Link
-                    href={`/products/${product.id}`}
-                    className="font-medium text-white hover:underline"
-                  >
-                    {product.name}
-                  </Link>
-                  <div className="mt-0.5 flex items-center gap-2 text-xs text-zinc-500">
-                    <span>{product.domain}</span>
-                    <a
-                      href={product.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-0.5 hover:text-zinc-300"
-                      aria-label={`Open ${product.name}`}
-                    >
-                      <ArrowSquareOut className="h-3 w-3" />
-                    </a>
-                  </div>
-                </td>
-                <td className="num px-4 py-3 text-right text-base font-medium text-white">
-                  {formatPrice(movement.current, currency)}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <MovementBadge
-                    direction={movement.direction}
-                    change={movement.change}
-                    changePercent={movement.changePercent}
-                    currency={currency}
-                  />
-                </td>
-                <td className="px-4 py-3">
-                  <PriceSparkline
-                    data={movement.sparkline}
-                    direction={movement.direction}
-                  />
-                </td>
-                <td className="num px-4 py-3 text-right text-zinc-400">
-                  {formatPrice(movement.low, currency)}
-                </td>
-                <td className="num px-4 py-3 text-right text-zinc-400">
-                  {formatPrice(movement.high, currency)}
-                </td>
-                <td className="px-4 py-3 text-zinc-500">
-                  {product.lastScrapedAt
-                    ? formatDistanceToNow(new Date(product.lastScrapedAt), { addSuffix: true })
-                    : "Never"}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end">
-                    <Button
-                      variant="secondary"
-                      onClick={() => handleScrape(product.id)}
-                      disabled={scrapingId === product.id}
-                      aria-label={`Scrape ${product.name}`}
-                    >
-                      <ArrowsClockwise
-                        className={`mr-1.5 h-3.5 w-3.5 ${scrapingId === product.id ? "animate-spin" : ""}`}
-                      />
-                      {scrapingId === product.id ? "..." : "Scrape"}
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {sortedProducts.map((product) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+            isScraping={scrapingId === product.id}
+            isDeleting={deletingId === product.id}
+            onScrape={handleScrape}
+            onDelete={handleDelete}
+          />
+        ))}
+      </div>
     </div>
   );
 };

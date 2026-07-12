@@ -26,3 +26,24 @@ export const extractDomain = (url: string) => {
     return url;
   }
 };
+
+/** Favicon via Google's public service (no API key). */
+export const getFaviconUrl = (domain: string, size = 64) =>
+  `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=${size}`;
+
+/** Deterministic mock helpers until margin/stock are scraped. */
+export const mockMarginPercent = (seed: string) => {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return 20 + (hash % 350) / 10;
+};
+
+export const mockInStock = (seed: string) => {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return hash % 7 !== 0;
+};
