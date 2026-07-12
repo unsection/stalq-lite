@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { ArrowDownRight, ArrowUpRight, ExternalLink, Minus, RefreshCw } from "lucide-react";
+import {
+  ArrowDownRight,
+  ArrowSquareOut,
+  ArrowUpRight,
+  ArrowsClockwise,
+  Minus,
+} from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import type { TrackerProduct } from "@/lib/pricing/getDashboardData";
@@ -197,7 +203,7 @@ export const PriceTrackerTable = ({ products }: PriceTrackerTableProps) => {
                       className="inline-flex items-center gap-0.5 hover:text-zinc-300"
                       aria-label={`Open ${product.name}`}
                     >
-                      <ExternalLink className="h-3 w-3" />
+                      <ArrowSquareOut className="h-3 w-3" />
                     </a>
                   </div>
                 </td>
@@ -237,7 +243,7 @@ export const PriceTrackerTable = ({ products }: PriceTrackerTableProps) => {
                       disabled={scrapingId === product.id}
                       aria-label={`Scrape ${product.name}`}
                     >
-                      <RefreshCw
+                      <ArrowsClockwise
                         className={`mr-1.5 h-3.5 w-3.5 ${scrapingId === product.id ? "animate-spin" : ""}`}
                       />
                       {scrapingId === product.id ? "..." : "Scrape"}

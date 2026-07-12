@@ -67,7 +67,7 @@ Global schedule is configured at **Settings** (`/settings`):
 - Primary and secondary times (HH:mm)
 - Timezone (global, not per product)
 
-**How it works:** A GitHub Actions workflow (`.github/workflows/cron-scrape.yml`) hits `/api/cron/scrape-all` every hour. The route checks whether the current time in your configured timezone matches a schedule slot (±5 min). If yes, it scrapes all products via the existing scrape pipeline.
+**How it works:** A GitHub Actions workflow (`.github/workflows/cron-scrape.yml`) hits `/api/cron/scrape-all` every hour. The route runs any configured slot whose time has already passed today and has not been scraped yet (catch-up), so delayed Actions still work.
 
 For local testing of batch scrape, use **Run all now** on the Settings page (`POST /api/products/scrape-all`).
 
@@ -79,7 +79,7 @@ For local testing of batch scrape, use **Run all now** on the Settings page (`PO
    - `CRON_SECRET` — same value as on Vercel
 3. Push the workflow file — scheduled runs start automatically (UTC). Use **Actions → Scheduled scrape → Run workflow** to test manually.
 
-Note: GitHub schedule triggers can be a few minutes late under load; keep schedule times aligned to the hour when possible.
+Note: GitHub schedule triggers can be delayed; catch-up logic still runs any due slot later the same day.
 
 After pulling this update, run migrations to add `schedule_settings`:
 

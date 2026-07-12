@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Filter, MoreHorizontal, RefreshCw } from "lucide-react";
+import { ArrowsClockwise, CaretDown, DotsThree, Funnel } from "@phosphor-icons/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import { DATE_RANGE_OPTIONS } from "@/lib/constants";
@@ -53,10 +53,10 @@ export const LogsPageClient = ({ logs, series, range, tab }: LogsPageClientProps
             aria-label="Refresh logs"
             disabled={isPending}
           >
-            <RefreshCw className={cn("h-4 w-4", isPending && "animate-spin")} />
+            <ArrowsClockwise className={cn("h-4 w-4", isPending && "animate-spin")} />
           </Button>
           <Button variant="ghost" aria-label="Filter logs">
-            <Filter className="h-4 w-4" />
+            <Funnel className="h-4 w-4" />
           </Button>
           <div className="relative">
             <Button
@@ -66,7 +66,7 @@ export const LogsPageClient = ({ logs, series, range, tab }: LogsPageClientProps
               aria-expanded={showRangeMenu}
             >
               {currentRangeLabel}
-              <ChevronDown className="ml-2 h-4 w-4" />
+              <CaretDown className="ml-2 h-4 w-4" />
             </Button>
             {showRangeMenu ? (
               <div className="absolute right-0 z-20 mt-2 w-44 rounded-md border border-zinc-800 bg-zinc-950 py-1 shadow-xl">
@@ -87,7 +87,7 @@ export const LogsPageClient = ({ logs, series, range, tab }: LogsPageClientProps
             ) : null}
           </div>
           <Button variant="ghost" aria-label="More options">
-            <MoreHorizontal className="h-4 w-4" />
+            <DotsThree className="h-4 w-4" />
           </Button>
         </div>
       </div>

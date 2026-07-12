@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { RefreshCw } from "lucide-react";
+import { ArrowsClockwise } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import type { ScheduleSettings } from "@/db/schema";
 import { Button } from "@/components/ui/Button";
@@ -197,7 +197,7 @@ export const ScheduleSettingsForm = () => {
             {isSaving ? "Saving..." : "Save schedule"}
           </Button>
           <Button type="button" variant="secondary" onClick={handleRunNow} disabled={isRunning}>
-            <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${isRunning ? "animate-spin" : ""}`} />
+            <ArrowsClockwise className={`mr-1.5 h-3.5 w-3.5 ${isRunning ? "animate-spin" : ""}`} />
             {isRunning ? "Scraping..." : "Run all now"}
           </Button>
         </div>
@@ -206,9 +206,9 @@ export const ScheduleSettingsForm = () => {
       <div className="rounded-md border border-zinc-900 bg-zinc-950 px-4 py-3 text-xs text-zinc-500">
         <p className="font-medium text-zinc-400">How scheduling works</p>
         <p className="mt-2">
-          Vercel Cron calls <code className="text-zinc-300">/api/cron/scrape-all</code> every hour.
-          If the current time in your timezone matches a configured slot (±5 min), all products
-          are scraped once for that slot.
+          A GitHub Action calls <code className="text-zinc-300">/api/cron/scrape-all</code> every
+          hour. After a configured time passes, the next cron hit scrapes all
+          products once for that slot (catch-up if the runner is late).
         </p>
       </div>
     </div>

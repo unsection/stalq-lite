@@ -2,7 +2,7 @@ name: Scheduled scrape
 
 on:
   schedule:
-    # Hourly — app decides whether the configured schedule slot matches (±5 min).
+    # Hourly — app catch-up runs any due schedule slot not yet completed today.
     - cron: "0 * * * *"
   workflow_dispatch:
 

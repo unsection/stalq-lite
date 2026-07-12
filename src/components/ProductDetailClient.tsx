@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { format } from "date-fns";
-import { RefreshCw, Trash2 } from "lucide-react";
+import { ArrowsClockwise, Trash } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { PriceHistoryRow, Product, ScrapeLog } from "@/db/schema";
@@ -88,11 +88,11 @@ const ProductDetailClient = ({ product, history, logs }: ProductDetailClientProp
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={handleScrape} disabled={isScraping}>
-            <RefreshCw className={`mr-1.5 h-4 w-4 ${isScraping ? "animate-spin" : ""}`} />
+            <ArrowsClockwise className={`mr-1.5 h-4 w-4 ${isScraping ? "animate-spin" : ""}`} />
             {isScraping ? "Scraping..." : "Scrape now"}
           </Button>
           <Button variant="ghost" onClick={handleDelete} disabled={isDeleting} aria-label="Delete product">
-            <Trash2 className="h-4 w-4" />
+            <Trash className="h-4 w-4" />
           </Button>
         </div>
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { Flag, KeyRound } from "lucide-react";
+import { Flag, Key } from "@phosphor-icons/react";
 import type { ScrapeLog } from "@/db/schema";
 import { formatDuration, formatPrice } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -78,7 +78,7 @@ export const LogsTable = ({ logs }: LogsTableProps) => {
               <td className="px-3 py-3 text-zinc-400">{log.finishReason ?? "—"}</td>
               <td className="px-3 py-3 text-zinc-400">
                 <span className="inline-flex items-center gap-1.5">
-                  <KeyRound className="h-3.5 w-3.5" />
+                  <Key className="h-3.5 w-3.5" />
                   Context.dev
                 </span>
               </td>

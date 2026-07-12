@@ -13,8 +13,6 @@ export type ScheduleMatch = {
   reason: "disabled" | "no_slot" | "already_ran" | "matched";
 };
 
-const WINDOW_MINUTES = 5;
-
 const parseTime = (time: string) => {
   const [hours, minutes] = time.split(":").map(Number);
   return { hours, minutes };
@@ -35,11 +33,14 @@ const getLocalParts = (date: Date, timezone: string) => {
   const get = (type: Intl.DateTimeFormatPartTypes) =>
     parts.find((part) => part.type === type)?.value ?? "0";
 
+  // Some engines report midnight as "24"; normalize to 0.
+  const hours = Number(get("hour")) % 24;
+
   return {
     year: get("year"),
     month: get("month"),
     day: get("day"),
-    hours: Number(get("hour")),
+    hours,
     minutes: Number(get("minute")),
   };
 };
@@ -52,12 +53,11 @@ const buildSlotKey = (date: Date, timezone: string, time: string) => {
   return `${local.year}-${local.month}-${local.day}T${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 };
 
-const isWithinWindow = (
-  nowMinutes: number,
-  slotMinutes: number,
-  windowMinutes: number,
-) => Math.abs(nowMinutes - slotMinutes) <= windowMinutes;
-
+/**
+ * Catch-up matcher: a slot is due once its local time has passed today and it
+ * has not yet been recorded in lastRunSlot. This tolerates delayed cron
+ * runners (e.g. GitHub Actions schedule jitter).
+ */
 export const shouldRunNow = (
   config: ScheduleConfig,
   now: Date = new Date(),
@@ -74,21 +74,28 @@ export const shouldRunNow = (
     slots.push(config.secondaryTime);
   }
 
+  let dueAlreadyRan: string | null = null;
+
   for (const slot of slots) {
     const { hours, minutes } = parseTime(slot);
     const slotMinutes = minutesSinceMidnight(hours, minutes);
 
-    if (!isWithinWindow(nowMinutes, slotMinutes, WINDOW_MINUTES)) {
+    if (nowMinutes < slotMinutes) {
       continue;
     }
 
     const slotKey = buildSlotKey(now, config.timezone, slot);
 
     if (config.lastRunSlot === slotKey) {
-      return { shouldRun: false, slotKey, reason: "already_ran" };
+      dueAlreadyRan = slotKey;
+      continue;
     }
 
     return { shouldRun: true, slotKey, reason: "matched" };
+  }
+
+  if (dueAlreadyRan) {
+    return { shouldRun: false, slotKey: dueAlreadyRan, reason: "already_ran" };
   }
 
   return { shouldRun: false, slotKey: null, reason: "no_slot" };

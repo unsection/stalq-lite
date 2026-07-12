@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { ExternalLink, RefreshCw } from "lucide-react";
+import { ArrowSquareOut, ArrowsClockwise } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Product } from "@/db/schema";
@@ -76,7 +76,7 @@ export const ProductList = ({ products }: ProductListProps) => {
                   className="mt-1 flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-300"
                 >
                   <span className="truncate">{product.url}</span>
-                  <ExternalLink className="h-3 w-3 shrink-0" />
+                  <ArrowSquareOut className="h-3 w-3 shrink-0" />
                 </a>
               </td>
               <td className="px-4 py-3 text-zinc-400">{product.domain}</td>
@@ -99,7 +99,7 @@ export const ProductList = ({ products }: ProductListProps) => {
                     disabled={scrapingId === product.id}
                     aria-label={`Scrape ${product.name}`}
                   >
-                    <RefreshCw
+                    <ArrowsClockwise
                       className={`mr-1.5 h-3.5 w-3.5 ${scrapingId === product.id ? "animate-spin" : ""}`}
                     />
                     {scrapingId === product.id ? "Scraping..." : "Scrape now"}

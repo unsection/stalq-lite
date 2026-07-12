@@ -1,4 +1,9 @@
-import { ArrowDownRight, ArrowUpRight, Minus, Package } from "lucide-react";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  Minus,
+  Package,
+} from "@phosphor-icons/react/dist/ssr";
 import type { DashboardSummary } from "@/lib/pricing/movement";
 import { cn } from "@/lib/utils";
 
@@ -32,30 +37,30 @@ export const DashboardStats = ({ summary }: DashboardStatsProps) => {
       <StatCard
         label="Tracked"
         value={summary.total}
-        icon={<Package className="h-4 w-4" />}
+        icon={<Package className="h-4 w-4" weight="duotone" />}
       />
       <StatCard
         label="Price drops"
         value={summary.drops}
-        icon={<ArrowDownRight className="h-4 w-4" />}
+        icon={<ArrowDownRight className="h-4 w-4" weight="duotone" />}
         accent="text-emerald-400"
       />
       <StatCard
         label="Price increases"
         value={summary.increases}
-        icon={<ArrowUpRight className="h-4 w-4" />}
+        icon={<ArrowUpRight className="h-4 w-4" weight="duotone" />}
         accent="text-red-400"
       />
       <StatCard
         label="Unchanged"
         value={summary.stable}
-        icon={<Minus className="h-4 w-4" />}
+        icon={<Minus className="h-4 w-4" weight="duotone" />}
         accent="text-zinc-400"
       />
       <StatCard
         label="No price yet"
         value={summary.unscrape}
-        icon={<Minus className="h-4 w-4" />}
+        icon={<Minus className="h-4 w-4" weight="duotone" />}
         accent="text-zinc-600"
       />
     </div>

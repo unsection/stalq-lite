@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans } from "next/font/google";
 import { AppHeader } from "@/components/AppHeader";
+import { PhosphorProvider } from "@/components/PhosphorProvider";
 import "./globals.css";
 
 const ibmPlexSans = IBM_Plex_Sans({
@@ -22,8 +23,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${ibmPlexSans.variable} h-full`}>
       <body className="min-h-full bg-black text-zinc-100 antialiased">
-        <AppHeader />
-        <main className="mx-auto w-full max-w-[1400px] px-6 py-8">{children}</main>
+        <PhosphorProvider>
+          <AppHeader />
+          <main className="mx-auto w-full max-w-[1400px] px-6 py-8">{children}</main>
+        </PhosphorProvider>
       </body>
     </html>
   );
