@@ -8,7 +8,7 @@ Price monitoring built with Next.js, Neon Postgres, and Context.dev HTML scrapin
 - On-demand scraping via Context.dev `GET /v1/web/scrape/html`
 - Price extraction from scraped HTML (JSON-LD, meta tags, selectors)
 - Price tracker dashboard with movement, sparklines, and change stats
-- Global scheduled checks (once or twice daily) via Vercel Cron
+- Global scheduled checks (once or twice daily) via Trigger.dev cron schedules
 - Dark Logs page with activity chart and dense scrape log table
 
 ## Stack
@@ -38,7 +38,8 @@ Required variables:
 - `DATABASE_URL` — Neon **pooled** connection string (`-pooler` hostname)
 - `DATABASE_URL_UNPOOLED` — Neon **direct** connection string (for migrations)
 - `CONTEXT_DEV_API_KEY` — from [context.dev](https://context.dev) dashboard
-- `CRON_SECRET` — random string for securing `/api/cron/scrape-all`
+- `TRIGGER_SECRET_KEY` — Trigger.dev API key (dashboard → API keys)
+- `TRIGGER_PROJECT_REF` — Trigger.dev project ref (dashboard → Project settings)
 
 3. Apply the database schema:
 
@@ -67,25 +68,26 @@ Global schedule is configured at **Settings** (`/settings`):
 - Primary and secondary times (HH:mm)
 - Timezone (global, not per product)
 
-**How it works:** A GitHub Actions workflow (`.github/workflows/cron-scrape.yml`) hits `/api/cron/scrape-all` every hour. The route runs any configured slot whose time has already passed today and has not been scraped yet (catch-up), so delayed Actions still work.
+**How it works:** Saving the schedule creates [Trigger.dev](https://trigger.dev) cron schedules
+(one per configured time, timezone-aware and DST-safe) attached to the `scheduled-scrape` task
+in `src/trigger/scheduledScrape.ts`. The task runs exactly on schedule — no hourly polling —
+with retries and run logs in the Trigger.dev dashboard.
 
 For local testing of batch scrape, use **Run all now** on the Settings page (`POST /api/products/scrape-all`).
 
-### GitHub Actions setup
+### Trigger.dev setup
 
-1. Set `CRON_SECRET` in Vercel project environment variables (same value the app verifies)
-2. In the GitHub repo, add Actions secrets:
-   - `APP_URL` — production URL, e.g. `https://stalq-lite.vercel.app`
-   - `CRON_SECRET` — same value as on Vercel
-3. Push the workflow file — scheduled runs start automatically (UTC). Use **Actions → Scheduled scrape → Run workflow** to test manually.
+1. Create a project at [cloud.trigger.dev](https://cloud.trigger.dev) and copy the **project ref**
+   into `TRIGGER_PROJECT_REF` (or replace the placeholder in `trigger.config.ts`)
+2. Set `TRIGGER_SECRET_KEY` (and `TRIGGER_PROJECT_REF`) in `.env.local` and in Vercel env vars
+3. Connect the **Vercel integration** (Trigger.dev dashboard → Project settings → Connect Vercel).
+   Every Vercel deploy then auto-deploys the tasks and syncs env vars — no manual `deploy` command
+4. Local development: run `npm run trigger:dev` alongside `npm run dev` so scheduled tasks can
+   execute locally
+5. Re-save the schedule in **Settings** once after setup to create the schedules
 
-Note: GitHub schedule triggers can be delayed; catch-up logic still runs any due slot later the same day.
-
-After pulling this update, run migrations to add `schedule_settings`:
-
-```bash
-npm run db:migrate
-```
+The task needs `DATABASE_URL` and `CONTEXT_DEV_API_KEY` available in Trigger.dev (synced
+automatically by the Vercel integration).
 
 ## Scrape settings
 
@@ -104,14 +106,14 @@ Each product stores Context.dev HTML scrape parameters:
 - `GET/PATCH/DELETE /api/products/[id]`
 - `POST /api/products/[id]/scrape`
 - `POST /api/products/scrape-all` — scrape all products (manual, from Settings UI)
-- `GET /api/cron/scrape-all` — hourly cron entrypoint (requires `Authorization: Bearer ${CRON_SECRET}`)
-- `GET/PATCH /api/settings/schedule` — global schedule settings
+- `GET/PATCH /api/settings/schedule` — global schedule settings (PATCH syncs Trigger.dev schedules)
 - `GET /api/logs?range=&tab=&productId=`
 - `GET /api/logs/series?range=&productId=`
 
 ## Scripts
 
 - `npm run dev` — development server
+- `npm run trigger:dev` — Trigger.dev dev server (runs scheduled tasks locally)
 - `npm run build` — production build
 - `npm run db:generate` — generate Drizzle migrations
 - `npm run db:migrate` — apply SQL migration to Neon (recommended for first setup)

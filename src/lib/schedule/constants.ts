@@ -11,17 +11,3 @@ export const FREQUENCY_OPTIONS = [
   { label: "Once a day", value: 1 },
   { label: "Twice a day", value: 2 },
 ] as const;
-
-export const verifyCronSecret = (request: Request) => {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    return { ok: false as const, status: 500, message: "CRON_SECRET is not configured" };
-  }
-
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${secret}`) {
-    return { ok: false as const, status: 401, message: "Unauthorized" };
-  }
-
-  return { ok: true as const };
-};

@@ -7,6 +7,7 @@ import type { ScheduleSettings } from "@/db/schema";
 import { Button } from "@/components/ui/Button";
 import { Toggle } from "@/components/ui/Toggle";
 import { FREQUENCY_OPTIONS, TIMEZONE_OPTIONS } from "@/lib/schedule/constants";
+import { parseCompletedSlots } from "@/lib/schedule/slots";
 
 export const ScheduleSettingsForm = () => {
   const [settings, setSettings] = useState<ScheduleSettings | null>(null);
@@ -69,9 +70,15 @@ export const ScheduleSettingsForm = () => {
         throw new Error(payload.message ?? "Failed to save settings");
       }
 
-      const data: ScheduleSettings = await response.json();
+      const data: ScheduleSettings & { triggerSyncError?: string } =
+        await response.json();
       setSettings(data);
-      setMessage("Schedule saved.");
+
+      if (data.triggerSyncError) {
+        setError(`Saved, but Trigger.dev sync failed: ${data.triggerSyncError}`);
+      } else {
+        setMessage("Schedule saved and synced to Trigger.dev.");
+      }
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Failed to save");
     } finally {
@@ -112,7 +119,7 @@ export const ScheduleSettingsForm = () => {
         <Toggle
           id="scheduleEnabled"
           label="Enable scheduled checks"
-          description="When enabled, the hourly cron will scrape all products at your configured times."
+          description="When enabled, Trigger.dev scrapes all products exactly at your configured times."
           checked={enabled}
           onChange={setEnabled}
         />
@@ -183,7 +190,10 @@ export const ScheduleSettingsForm = () => {
             </p>
             {settings.lastRunSlot ? (
               <p className="mt-1">
-                Slot: <span className="text-zinc-200">{settings.lastRunSlot}</span>
+                Slots:{" "}
+                <span className="text-zinc-200">
+                  {parseCompletedSlots(settings.lastRunSlot).join(", ")}
+                </span>
               </p>
             ) : null}
           </div>
@@ -206,9 +216,10 @@ export const ScheduleSettingsForm = () => {
       <div className="rounded-md border border-zinc-900 bg-zinc-950 px-4 py-3 text-xs text-zinc-500">
         <p className="font-medium text-zinc-400">How scheduling works</p>
         <p className="mt-2">
-          A GitHub Action calls <code className="text-zinc-300">/api/cron/scrape-all</code> every
-          hour. After a configured time passes, the next cron hit scrapes all
-          products once for that slot (catch-up if the runner is late).
+          Saving creates <a href="https://trigger.dev" className="text-zinc-300 underline" target="_blank" rel="noreferrer">Trigger.dev</a> cron
+          schedules for your configured times (timezone-aware, DST-safe). The scrape task runs
+          exactly on schedule — no hourly polling, with retries and run logs in the Trigger.dev
+          dashboard.
         </p>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { scheduleSettings, type ScheduleSettings } from "@/db/schema";
+import { appendCompletedSlot } from "@/lib/schedule/slots";
 
 export const DEFAULT_SCHEDULE = {
   enabled: false,
@@ -61,7 +62,7 @@ export const markScheduleRun = async (slotKey: string) => {
     .update(scheduleSettings)
     .set({
       lastRunAt: new Date(),
-      lastRunSlot: slotKey,
+      lastRunSlot: appendCompletedSlot(current.lastRunSlot, slotKey),
       updatedAt: new Date(),
     })
     .where(eq(scheduleSettings.id, current.id))

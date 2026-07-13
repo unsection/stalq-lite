@@ -113,7 +113,7 @@ const ProductCard = ({
 
   return (
     <article className="flex flex-col rounded-xl bg-zinc-900 p-4 transition-colors hover:bg-zinc-900/80">
-      <div className="flex items-start gap-3">
+      <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-800">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -126,14 +126,14 @@ const ProductCard = ({
           />
         </div>
 
-        <div className="min-w-0 flex-1 leading-none">
+        <div className="min-w-0 flex-1 space-y-1">
           <Link
             href={`/products/${product.id}`}
-            className="line-clamp-1 font-medium leading-none text-white hover:underline"
+            className="line-clamp-1 font-medium leading-tight text-white hover:underline"
           >
             {product.name}
           </Link>
-          <p className="truncate text-xs leading-none text-zinc-500">{product.domain}</p>
+          <p className="truncate text-xs leading-tight text-zinc-500">{product.domain}</p>
         </div>
 
         <div className="relative shrink-0" ref={menuRef}>
@@ -317,7 +317,7 @@ export const PriceTrackerTable = ({ products }: PriceTrackerTableProps) => {
         </p>
         <Link
           href="/products/new"
-          className="mt-6 inline-flex rounded-md bg-[#0080FF] px-4 py-2 text-sm font-medium text-white hover:bg-[#0066cc]"
+          className="mt-6 inline-flex rounded-full bg-[#0080FF] px-4 py-2 text-sm font-medium text-white hover:bg-[#0066cc]"
         >
           Add product
         </Link>
@@ -330,9 +330,10 @@ export const PriceTrackerTable = ({ products }: PriceTrackerTableProps) => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-zinc-500">
-          {products.length} product{products.length === 1 ? "" : "s"}
-        </p>
+        <div>
+          <h2 className="text-lg font-semibold text-white">Competitors</h2>
+          <p className="text-sm text-zinc-500">8 tracked · 0 cheaper than you</p>
+        </div>
         <label className="flex items-center gap-2 text-sm text-zinc-500">
           <span className="sr-only">Sort by</span>
           <select

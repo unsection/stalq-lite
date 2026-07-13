@@ -3,6 +3,7 @@ import {
   getScheduleSettings,
   updateScheduleSettings,
 } from "@/lib/schedule/getScheduleSettings";
+import { syncTriggerSchedules } from "@/lib/schedule/syncTriggerSchedules";
 import { scheduleSettingsSchema } from "@/lib/validation";
 
 export const GET = async () => {
@@ -37,6 +38,19 @@ export const PATCH = async (request: Request) => {
       secondaryTime: input.frequency === 2 ? input.secondaryTime ?? null : null,
       timezone: input.timezone,
     });
+
+    try {
+      await syncTriggerSchedules(updated);
+    } catch (syncError) {
+      // Settings are saved; surface the sync failure without losing them.
+      return NextResponse.json({
+        ...updated,
+        triggerSyncError:
+          syncError instanceof Error
+            ? syncError.message
+            : "Failed to sync Trigger.dev schedules",
+      });
+    }
 
     return NextResponse.json(updated);
   } catch (error) {

@@ -42,7 +42,7 @@ export const ProductList = ({ products }: ProductListProps) => {
         </p>
         <Link
           href="/products/new"
-          className="mt-6 inline-flex rounded-md bg-[#0080FF] px-4 py-2 text-sm font-medium text-white hover:bg-[#0066cc]"
+          className="mt-6 inline-flex rounded-full bg-[#0080FF] px-4 py-2 text-sm font-medium text-white hover:bg-[#0066cc]"
         >
           Add product
         </Link>
