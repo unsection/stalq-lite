@@ -1,20 +1,22 @@
 import Link from "next/link";
 import { PriceTrackerTable } from "@/components/PriceTrackerTable";
-import { ProductInfoCard } from "@/components/ProductInfoCard";
-import { ProductToolbar } from "@/components/ProductToolbar";
+import { ProductWorkspace } from "@/components/ProductWorkspace";
 import {
   getDashboardData,
   type TrackerProduct,
 } from "@/lib/pricing/getDashboardData";
+import { getOwnProducts } from "@/lib/pricing/getOwnProducts";
+import type { OwnProduct } from "@/db/schema";
 
 export const dynamic = "force-dynamic";
 
 const HomePage = async () => {
   let products: TrackerProduct[] | null = null;
+  let ownProducts: OwnProduct[] = [];
   let errorMessage: string | null = null;
 
   try {
-    ({ products } = await getDashboardData());
+    [{ products }, ownProducts] = await Promise.all([getDashboardData(), getOwnProducts()]);
   } catch (error) {
     errorMessage = error instanceof Error ? error.message : "Database error";
   }
@@ -51,15 +53,7 @@ const HomePage = async () => {
         </Link>
       </div>
 
-      <ProductToolbar
-        productCount={products.length}
-        products={products.map((product) => ({
-          id: product.id,
-          name: product.name,
-          domain: product.domain,
-        }))}
-      />
-      <ProductInfoCard />
+      <ProductWorkspace ownProducts={ownProducts} />
       <PriceTrackerTable products={products} />
     </div>
   );

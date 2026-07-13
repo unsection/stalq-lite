@@ -1,15 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
-import { MagnifyingGlass, Plus, X } from "@phosphor-icons/react";
+import { MagnifyingGlass, Package, Plus, X } from "@phosphor-icons/react";
 import { cn, getFaviconUrl } from "@/lib/utils";
 
 export type PickerProduct = {
   id: string;
   name: string;
-  domain: string;
-  sku?: string;
+  domain?: string;
+  sku?: string | null;
+  url?: string | null;
 };
 
 type ProductPickerModalProps = {
@@ -19,16 +19,8 @@ type ProductPickerModalProps = {
   recent?: PickerProduct[];
   selectedId?: string | null;
   onSelect?: (product: PickerProduct) => void;
+  onAddProduct?: () => void;
 };
-
-const MOCK_RECENT: PickerProduct[] = [
-  {
-    id: "mock-logitech",
-    name: "Logitech MX Master 3S",
-    domain: "walmart.com",
-    sku: "LOGI-MX3S-WHT",
-  },
-];
 
 const brandFromDomain = (domain: string) => {
   const host = domain.replace(/^www\./, "");
@@ -36,13 +28,72 @@ const brandFromDomain = (domain: string) => {
   return name.charAt(0).toUpperCase() + name.slice(1);
 };
 
+const subtitleFor = (product: PickerProduct) => {
+  if (product.domain) {
+    const brand = brandFromDomain(product.domain);
+    return product.sku ? `${brand} · ${product.sku}` : brand;
+  }
+  return product.sku ? product.sku : "Your product";
+};
+
+const ProductAvatar = ({ product }: { product: PickerProduct }) => {
+  if (product.domain) {
+    return (
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-800">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={getFaviconUrl(product.domain)}
+          alt=""
+          width={18}
+          height={18}
+          className="h-[18px] w-[18px]"
+        />
+      </span>
+    );
+  }
+
+  return (
+    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-zinc-300">
+      <Package className="h-4 w-4" weight="duotone" />
+    </span>
+  );
+};
+
+const ProductRow = ({
+  product,
+  isSelected,
+  onSelect,
+}: {
+  product: PickerProduct;
+  isSelected: boolean;
+  onSelect: (product: PickerProduct) => void;
+}) => (
+  <li>
+    <button
+      type="button"
+      onClick={() => onSelect(product)}
+      className={cn(
+        "flex w-full items-center gap-3 rounded-2xl px-2.5 py-2.5 text-left transition-colors",
+        isSelected ? "bg-zinc-800" : "hover:bg-zinc-900",
+      )}
+    >
+      <ProductAvatar product={product} />
+      <span className="min-w-0">
+        <span className="block truncate text-base font-medium text-white">{product.name}</span>
+        <span className="block truncate text-xs text-zinc-500">{subtitleFor(product)}</span>
+      </span>
+    </button>
+  </li>
+);
+
 export const ProductPickerModal = ({
   open,
   onClose,
   products = [],
-  recent = MOCK_RECENT,
+  recent = [],
   selectedId = null,
   onSelect,
+  onAddProduct,
 }: ProductPickerModalProps) => {
   const titleId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -80,7 +131,7 @@ export const ProductPickerModal = ({
     if (!normalized) return true;
     return (
       product.name.toLowerCase().includes(normalized) ||
-      product.domain.toLowerCase().includes(normalized) ||
+      (product.domain?.toLowerCase().includes(normalized) ?? false) ||
       (product.sku?.toLowerCase().includes(normalized) ?? false)
     );
   };
@@ -91,6 +142,11 @@ export const ProductPickerModal = ({
   const handleSelect = (product: PickerProduct) => {
     onSelect?.(product);
     onClose();
+  };
+
+  const handleAddProduct = () => {
+    onClose();
+    onAddProduct?.();
   };
 
   const handleBackdropClick = (event: MouseEvent<HTMLDivElement>) => {
@@ -150,38 +206,12 @@ export const ProductPickerModal = ({
               </p>
               <ul className="mt-2 space-y-1">
                 {filteredRecent.map((product) => (
-                  <li key={product.id}>
-                    <button
-                      type="button"
-                      onClick={() => handleSelect(product)}
-                      className={cn(
-                        "flex w-full items-center gap-3 rounded-2xl px-2.5 py-2.5 text-left transition-colors",
-                        selectedId === product.id
-                          ? "bg-zinc-800"
-                          : "bg-zinc-900/80 hover:bg-zinc-800",
-                      )}
-                    >
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-800">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={getFaviconUrl(product.domain)}
-                          alt=""
-                          width={18}
-                          height={18}
-                          className="h-[18px] w-[18px]"
-                        />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block truncate text-base font-medium text-white">
-                          {product.name}
-                        </span>
-                        <span className="block truncate text-xs text-zinc-500">
-                          {brandFromDomain(product.domain)}
-                          {product.sku ? ` · ${product.sku}` : ""}
-                        </span>
-                      </span>
-                    </button>
-                  </li>
+                  <ProductRow
+                    key={product.id}
+                    product={product}
+                    isSelected={selectedId === product.id}
+                    onSelect={handleSelect}
+                  />
                 ))}
               </ul>
             </section>
@@ -194,55 +224,33 @@ export const ProductPickerModal = ({
             {filteredAll.length > 0 ? (
               <ul className="mt-2 space-y-1">
                 {filteredAll.map((product) => (
-                  <li key={product.id}>
-                    <button
-                      type="button"
-                      onClick={() => handleSelect(product)}
-                      className={cn(
-                        "flex w-full items-center gap-3 rounded-2xl px-2.5 py-2.5 text-left transition-colors",
-                        selectedId === product.id
-                          ? "bg-zinc-800"
-                          : "hover:bg-zinc-900",
-                      )}
-                    >
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-800">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={getFaviconUrl(product.domain)}
-                          alt=""
-                          width={18}
-                          height={18}
-                          className="h-[18px] w-[18px]"
-                        />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block truncate text-base font-medium text-white">
-                          {product.name}
-                        </span>
-                        <span className="block truncate text-xs text-zinc-500">
-                          {brandFromDomain(product.domain)}
-                          {product.sku ? ` · ${product.sku}` : ""}
-                        </span>
-                      </span>
-                    </button>
-                  </li>
+                  <ProductRow
+                    key={product.id}
+                    product={product}
+                    isSelected={selectedId === product.id}
+                    onSelect={handleSelect}
+                  />
                 ))}
               </ul>
-            ) : null}
+            ) : (
+              <p className="px-2 py-6 text-center text-sm text-zinc-500">
+                No products yet. Add your first product below.
+              </p>
+            )}
           </section>
         </div>
 
         <div className="px-3 py-2">
-          <Link
-            href="/products/new"
-            onClick={onClose}
-            className="flex w-full items-center gap-3 rounded-2xl px-2.5 py-2.5 text-base text-white transition-colors hover:bg-zinc-900"
+          <button
+            type="button"
+            onClick={handleAddProduct}
+            className="flex w-full items-center gap-3 rounded-2xl px-2.5 py-2.5 text-left text-base text-white transition-colors hover:bg-zinc-900"
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-300">
               <Plus className="h-4 w-4" weight="bold" />
             </span>
             Add product
-          </Link>
+          </button>
         </div>
       </div>
     </div>

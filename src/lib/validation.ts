@@ -50,3 +50,22 @@ export const scheduleSettingsSchema = z
   });
 
 export type ScheduleSettingsInput = z.infer<typeof scheduleSettingsSchema>;
+
+export const ownProductInputSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  sku: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((value) => (value && value.trim() ? value.trim() : null)),
+  url: z
+    .union([z.literal(""), z.string().url("Enter a valid URL")])
+    .optional()
+    .nullable()
+    .transform((value) => (value ? value : null)),
+  price: z.number().positive("Price must be greater than 0"),
+});
+
+export type OwnProductInput = z.infer<typeof ownProductInputSchema>;
+
+export const ownProductUpdateSchema = ownProductInputSchema.partial();

@@ -8,6 +8,13 @@
       "when": 1783708144601,
       "tag": "0000_aspiring_shatterstar",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783948043002,
+      "tag": "0001_classy_outlaw_kid",
+      "breakpoints": true
     }
   ]
 }

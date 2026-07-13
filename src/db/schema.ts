@@ -63,6 +63,17 @@ export const scrapeLogs = pgTable("scrape_logs", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const ownProducts = pgTable("own_products", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  sku: text("sku"),
+  url: text("url"),
+  price: numeric("price", { precision: 12, scale: 2 }).notNull(),
+  currency: text("currency").notNull().default("USD"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const scheduleSettings = pgTable("schedule_settings", {
   id: uuid("id").defaultRandom().primaryKey(),
   enabled: boolean("enabled").notNull().default(false),
@@ -81,3 +92,5 @@ export type PriceHistoryRow = typeof priceHistory.$inferSelect;
 export type ScrapeLog = typeof scrapeLogs.$inferSelect;
 export type ScheduleSettings = typeof scheduleSettings.$inferSelect;
 export type NewScheduleSettings = typeof scheduleSettings.$inferInsert;
+export type OwnProduct = typeof ownProducts.$inferSelect;
+export type NewOwnProduct = typeof ownProducts.$inferInsert;
