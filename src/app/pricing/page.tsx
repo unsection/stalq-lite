@@ -23,6 +23,13 @@ const PricingPage = () => {
         </p>
       </div>
 
+      <section className="rounded-lg border border-emerald-900/60 bg-emerald-950/30 px-5 py-4 text-center">
+        <p className="text-sm font-medium text-emerald-400">Free during beta</p>
+        <p className="mt-1 text-sm text-zinc-400">
+          Sign up and start monitoring competitor pricing at no cost while Stalq is in beta.
+        </p>
+      </section>
+
       <div className="grid gap-4 sm:grid-cols-2">
         {plans.map((plan) => (
           <div

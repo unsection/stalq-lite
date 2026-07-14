@@ -9,7 +9,7 @@ const ChangelogPage = () => {
       <div>
         <h1 className="text-3xl font-semibold tracking-tight text-white">Changelog</h1>
         <p className="mt-1 text-sm text-zinc-500">
-          Product updates, improvements, and fixes for Stalq Lite.
+          Product updates, improvements, and fixes for Stalq.
         </p>
       </div>
 

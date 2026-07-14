@@ -69,12 +69,12 @@ export const AppSidebar = () => {
             "flex items-center gap-2 rounded-lg bg-zinc-900/80 px-2.5 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800",
             collapsed && "justify-center px-2",
           )}
-          aria-label="Stalq Lite home"
+          aria-label="Stalq home"
         >
           <House className="h-4 w-4 shrink-0 text-zinc-300" weight="duotone" />
           {!collapsed && (
             <>
-              <span className="min-w-0 flex-1 truncate">Stalq Lite</span>
+              <span className="min-w-0 flex-1 truncate">Stalq</span>
               <CaretDown className="h-3.5 w-3.5 shrink-0 text-zinc-500" weight="duotone" />
             </>
           )}

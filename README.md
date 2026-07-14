@@ -1,4 +1,4 @@
-# Stalq Lite
+# Stalq
 
 Price monitoring built with Next.js, Neon Postgres, and Context.dev HTML scraping.
 

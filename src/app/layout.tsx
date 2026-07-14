@@ -11,7 +11,7 @@ const ibmPlexSans = IBM_Plex_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Stalq Lite — Price Monitoring",
+  title: "Stalq — Price Monitoring",
   description: "Monitor product prices with Context.dev scraping",
 };
 

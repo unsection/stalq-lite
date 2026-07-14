@@ -49,7 +49,7 @@ export const changelogEntries: ChangelogEntry[] = [
     postedAt: "2026-07-12",
     title: "Initial release",
     summary:
-      "Stalq Lite is live — track competitor product prices, scrape on demand or on a schedule, and review movement from a dark dashboard.",
+      "Stalq is live — track competitor product prices, scrape on demand or on a schedule, and review movement from a dark dashboard.",
     sections: [
       {
         heading: "Price tracker",

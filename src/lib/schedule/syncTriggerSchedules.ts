@@ -1,7 +1,8 @@
 import { schedules } from "@trigger.dev/sdk";
 import type { ScheduleSettings } from "@/db/schema";
 
-const EXTERNAL_ID = "stalq-lite-global";
+const EXTERNAL_ID = "stalq-global";
+const LEGACY_EXTERNAL_ID = "stalq-lite-global";
 const TASK_ID = "scheduled-scrape";
 
 const toCron = (time: string) => {
@@ -17,7 +18,8 @@ const toCron = (time: string) => {
 export const syncTriggerSchedules = async (settings: ScheduleSettings) => {
   const existing = await schedules.list({ perPage: 100 });
   const ours = existing.data.filter(
-    (schedule) => schedule.externalId === EXTERNAL_ID,
+    (schedule) =>
+      schedule.externalId === EXTERNAL_ID || schedule.externalId === LEGACY_EXTERNAL_ID,
   );
 
   for (const schedule of ours) {
