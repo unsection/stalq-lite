@@ -1,5 +1,3 @@
-import Link from "next/link";
-import { PriceTrackerTable } from "@/components/PriceTrackerTable";
 import { ProductWorkspace } from "@/components/ProductWorkspace";
 import {
   getDashboardData,
@@ -38,23 +36,14 @@ const HomePage = async () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-white">Price tracker</h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Monitor pricing movement, drops, and increases across tracked products.
-          </p>
-        </div>
-        <Link
-          href="/products/new"
-          className="inline-flex rounded-full bg-[#0080FF] px-4 py-2 text-sm font-medium text-white hover:bg-[#0066cc]"
-        >
-          Add product
-        </Link>
+      <div>
+        <h1 className="text-3xl font-semibold tracking-tight text-white">Price tracker</h1>
+        <p className="mt-1 text-sm text-zinc-500">
+          Monitor pricing movement, drops, and increases across tracked products.
+        </p>
       </div>
 
-      <ProductWorkspace ownProducts={ownProducts} />
-      <PriceTrackerTable products={products} />
+      <ProductWorkspace ownProducts={ownProducts} competitors={products} />
     </div>
   );
 };

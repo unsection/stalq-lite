@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { ArrowsClockwise, Trash } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { PriceHistoryRow, Product, ScrapeLog } from "@/db/schema";
+import type { OwnProduct, PriceHistoryRow, Product, ScrapeLog } from "@/db/schema";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import { ScrapeSettingsForm } from "@/components/ScrapeSettingsForm";
 import { Button } from "@/components/ui/Button";
@@ -16,9 +16,10 @@ type ProductDetailClientProps = {
   product: Product;
   history: PriceHistoryRow[];
   logs: ScrapeLog[];
+  ownProducts: OwnProduct[];
 };
 
-const ProductDetailClient = ({ product, history, logs }: ProductDetailClientProps) => {
+const ProductDetailClient = ({ product, history, logs, ownProducts }: ProductDetailClientProps) => {
   const router = useRouter();
   const [isScraping, setIsScraping] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -107,7 +108,9 @@ const ProductDetailClient = ({ product, history, logs }: ProductDetailClientProp
 
       <section className="rounded-lg border border-zinc-900 bg-zinc-950 p-6">
         <ScrapeSettingsForm
+          ownProducts={ownProducts}
           initialValues={{
+            ownProductId: product.ownProductId ?? "",
             name: product.name,
             url: product.url,
             useMainContentOnly: product.useMainContentOnly,

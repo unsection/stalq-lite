@@ -51,6 +51,7 @@ export const PATCH = async (request: Request, context: RouteContext) => {
       updatedAt: new Date(),
     };
 
+    if (input.ownProductId !== undefined) updates.ownProductId = input.ownProductId;
     if (input.name !== undefined) updates.name = input.name;
     if (input.url !== undefined) {
       updates.url = input.url;

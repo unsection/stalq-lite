@@ -9,21 +9,24 @@ import {
   ArrowsClockwise,
   DotsThree,
   Eye,
+  Plus,
   Trash,
 } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { TrackerProduct } from "@/lib/pricing/getDashboardData";
+import type { OwnProduct } from "@/db/schema";
+import { calculateMargin } from "@/lib/pricing/margin";
 import {
   cn,
   formatPrice,
   getFaviconUrl,
   mockInStock,
-  mockMarginPercent,
 } from "@/lib/utils";
 
 type PriceTrackerTableProps = {
   products: TrackerProduct[];
+  ownProduct: OwnProduct;
 };
 
 type SortKey = "name" | "price" | "change" | "lastScraped";
@@ -64,12 +67,14 @@ const ProductCard = ({
   product,
   isScraping,
   isDeleting,
+  ownProduct,
   onScrape,
   onDelete,
 }: {
   product: TrackerProduct;
   isScraping: boolean;
   isDeleting: boolean;
+  ownProduct: OwnProduct;
   onScrape: (productId: string) => void;
   onDelete: (productId: string) => void;
 }) => {
@@ -77,7 +82,12 @@ const ProductCard = ({
   const menuRef = useRef<HTMLDivElement>(null);
   const { movement } = product;
   const currency = product.currency ?? "USD";
-  const margin = mockMarginPercent(product.id);
+  const margin = calculateMargin({
+    price: product.movement.current ?? 0,
+    costPerUnit: Number(ownProduct.costPerUnit),
+    marketplaceFeePercent: Number(ownProduct.marketplaceFeePercent),
+    shippingCostPerUnit: Number(ownProduct.shippingCostPerUnit),
+  });
   const inStock = mockInStock(product.id);
 
   useEffect(() => {
@@ -212,8 +222,15 @@ const ProductCard = ({
       </div>
 
       <p className="mt-2">
-        <span className="inline-flex rounded-full bg-emerald-950/80 px-2.5 py-1 text-xs font-medium text-emerald-400 ring-1 ring-inset ring-emerald-900/60">
-          {margin.toFixed(1)}% margin at their price
+        <span
+          className={cn(
+            "inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset",
+            margin.marginPercent < 5
+              ? "bg-red-950/80 text-red-400 ring-red-900/60"
+              : "bg-emerald-950/80 text-emerald-400 ring-emerald-900/60",
+          )}
+        >
+          {margin.marginPercent.toFixed(1)}% margin at their price
         </span>
       </p>
 
@@ -238,7 +255,7 @@ const ProductCard = ({
   );
 };
 
-export const PriceTrackerTable = ({ products }: PriceTrackerTableProps) => {
+export const PriceTrackerTable = ({ products, ownProduct }: PriceTrackerTableProps) => {
   const router = useRouter();
   const [scrapingId, setScrapingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -308,23 +325,6 @@ export const PriceTrackerTable = ({ products }: PriceTrackerTableProps) => {
     return rows;
   }, [products, sortAsc, sortKey]);
 
-  if (products.length === 0) {
-    return (
-      <div className="rounded-xl border border-zinc-900 bg-zinc-950 px-6 py-16 text-center">
-        <h2 className="text-lg font-medium text-white">No products tracked yet</h2>
-        <p className="mt-2 text-sm text-zinc-500">
-          Add product URLs to start monitoring price movement.
-        </p>
-        <Link
-          href="/products/new"
-          className="mt-6 inline-flex rounded-full bg-[#0080FF] px-4 py-2 text-sm font-medium text-white hover:bg-[#0066cc]"
-        >
-          Add product
-        </Link>
-      </div>
-    );
-  }
-
   const sortValue = `${sortKey}:${sortAsc ? "asc" : "desc"}`;
 
   return (
@@ -332,7 +332,7 @@ export const PriceTrackerTable = ({ products }: PriceTrackerTableProps) => {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-white">Competitors</h2>
-          <p className="text-sm text-zinc-500">8 tracked · 0 cheaper than you</p>
+          <p className="text-sm text-zinc-500">{products.length} tracked for {ownProduct.name}</p>
         </div>
         <label className="flex items-center gap-2 text-sm text-zinc-500">
           <span className="sr-only">Sort by</span>
@@ -357,12 +357,24 @@ export const PriceTrackerTable = ({ products }: PriceTrackerTableProps) => {
           <ProductCard
             key={product.id}
             product={product}
+            ownProduct={ownProduct}
             isScraping={scrapingId === product.id}
             isDeleting={deletingId === product.id}
             onScrape={handleScrape}
             onDelete={handleDelete}
           />
         ))}
+        <Link
+          href={`/products/new?ownProductId=${ownProduct.id}`}
+          aria-label={`Add a competitor link for ${ownProduct.name}`}
+          className="flex min-h-52 flex-col items-center justify-center rounded-xl border border-dashed border-zinc-700 bg-zinc-950 p-4 text-center transition-colors hover:border-[#0080FF]/70 hover:bg-zinc-900"
+        >
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 text-zinc-400">
+            <Plus className="h-5 w-5" weight="bold" />
+          </span>
+          <span className="mt-3 text-sm font-medium text-zinc-200">Add competitor link</span>
+          <span className="mt-1 text-xs text-zinc-500">Paste any product URL</span>
+        </Link>
       </div>
     </div>
   );

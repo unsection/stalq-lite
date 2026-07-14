@@ -13,6 +13,38 @@ export type ChangelogEntry = {
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: "0.1.0",
+    postedAt: "2026-07-14",
+    title: "Product-based price tracking",
+    summary:
+      "Track each of your products separately, connect the right competitors to it, and see real margin calculations directly in the dashboard.",
+    sections: [
+      {
+        heading: "Your products and competitors",
+        items: [
+          "Create and switch between your own products from the tracker.",
+          "Link every competitor to a specific product, so each dashboard view stays focused.",
+          "Add competitor links from the final card in each product's competitor list.",
+        ],
+      },
+      {
+        heading: "Margin and costs",
+        items: [
+          "Save cost per unit, marketplace fees, shipping cost, and a target healthy margin for each product.",
+          "Calculate current margin, profit per unit, break-even price, and the price needed to reach your target margin.",
+          "Show the real margin at every competitor's price, with a warning for margins below 5%.",
+        ],
+      },
+      {
+        heading: "Tracker improvements",
+        items: [
+          "Show the live competitor count, lowest competitor price, and your rank for the selected product.",
+          "Simplify the dashboard header so the next action is always clear in the product workspace.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.0.1",
     postedAt: "2026-07-12",
     title: "Initial release",

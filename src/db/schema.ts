@@ -18,6 +18,9 @@ export const scrapeStatusEnum = pgEnum("scrape_status", [
 
 export const products = pgTable("products", {
   id: uuid("id").defaultRandom().primaryKey(),
+  ownProductId: uuid("own_product_id").references(() => ownProducts.id, {
+    onDelete: "cascade",
+  }),
   name: text("name").notNull(),
   url: text("url").notNull(),
   domain: text("domain").notNull(),
@@ -70,6 +73,22 @@ export const ownProducts = pgTable("own_products", {
   url: text("url"),
   price: numeric("price", { precision: 12, scale: 2 }).notNull(),
   currency: text("currency").notNull().default("USD"),
+  costPerUnit: numeric("cost_per_unit", { precision: 12, scale: 2 }).notNull().default("0"),
+  marketplaceFeePercent: numeric("marketplace_fee_percent", {
+    precision: 5,
+    scale: 2,
+  })
+    .notNull()
+    .default("0"),
+  shippingCostPerUnit: numeric("shipping_cost_per_unit", {
+    precision: 12,
+    scale: 2,
+  })
+    .notNull()
+    .default("0"),
+  targetMarginPercent: numeric("target_margin_percent", { precision: 5, scale: 2 })
+    .notNull()
+    .default("20"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

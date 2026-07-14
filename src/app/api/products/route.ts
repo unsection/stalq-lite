@@ -26,6 +26,7 @@ export const POST = async (request: Request) => {
     const [created] = await db
       .insert(products)
       .values({
+        ownProductId: input.ownProductId,
         name: input.name,
         url: input.url,
         domain: extractDomain(input.url),

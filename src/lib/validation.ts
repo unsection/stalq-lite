@@ -13,6 +13,7 @@ const selectorListSchema = z
   });
 
 export const productInputSchema = z.object({
+  ownProductId: z.string().uuid("Choose the product you are comparing against"),
   name: z.string().min(1, "Name is required"),
   url: z.string().url("Enter a valid URL"),
   useMainContentOnly: z.boolean().default(false),
@@ -64,6 +65,10 @@ export const ownProductInputSchema = z.object({
     .nullable()
     .transform((value) => (value ? value : null)),
   price: z.number().positive("Price must be greater than 0"),
+  costPerUnit: z.number().min(0).optional(),
+  marketplaceFeePercent: z.number().min(0).max(100).optional(),
+  shippingCostPerUnit: z.number().min(0).optional(),
+  targetMarginPercent: z.number().min(0).max(100).optional(),
 });
 
 export type OwnProductInput = z.infer<typeof ownProductInputSchema>;

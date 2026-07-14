@@ -42,6 +42,16 @@ export const PATCH = async (request: Request, context: RouteContext) => {
     if (input.sku !== undefined) updates.sku = input.sku;
     if (input.url !== undefined) updates.url = input.url;
     if (input.price !== undefined) updates.price = input.price.toFixed(2);
+    if (input.costPerUnit !== undefined) updates.costPerUnit = input.costPerUnit.toFixed(2);
+    if (input.marketplaceFeePercent !== undefined) {
+      updates.marketplaceFeePercent = input.marketplaceFeePercent.toFixed(2);
+    }
+    if (input.shippingCostPerUnit !== undefined) {
+      updates.shippingCostPerUnit = input.shippingCostPerUnit.toFixed(2);
+    }
+    if (input.targetMarginPercent !== undefined) {
+      updates.targetMarginPercent = input.targetMarginPercent.toFixed(2);
+    }
 
     const [updated] = await db
       .update(ownProducts)

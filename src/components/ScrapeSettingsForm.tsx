@@ -10,8 +10,10 @@ import type { ProductInput } from "@/lib/validation";
 import { parseSelectorsInput } from "@/lib/dates";
 import { Button } from "@/components/ui/Button";
 import { Toggle } from "@/components/ui/Toggle";
+import type { OwnProduct } from "@/db/schema";
 
 const defaultValues: ProductInput = {
+  ownProductId: "",
   name: "",
   url: "",
   useMainContentOnly: false,
@@ -26,12 +28,14 @@ const defaultValues: ProductInput = {
 
 type ScrapeSettingsFormProps = {
   initialValues?: Partial<ProductInput>;
+  ownProducts: OwnProduct[];
   submitLabel: string;
   onSubmit: (values: ProductInput) => Promise<void>;
 };
 
 export const ScrapeSettingsForm = ({
   initialValues,
+  ownProducts,
   submitLabel,
   onSubmit,
 }: ScrapeSettingsFormProps) => {
@@ -78,6 +82,25 @@ export const ScrapeSettingsForm = ({
           <p className="text-sm text-zinc-500">Basic product details to monitor.</p>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
+          <label className="block space-y-2 md:col-span-2">
+            <span className="text-sm text-zinc-400">Compare against</span>
+            <select
+              required
+              value={values.ownProductId}
+              onChange={(event) => setValues((prev) => ({ ...prev, ownProductId: event.target.value }))}
+              className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white outline-none focus:border-zinc-600"
+            >
+              <option value="" disabled>
+                Select your product
+              </option>
+              {ownProducts.map((ownProduct) => (
+                <option key={ownProduct.id} value={ownProduct.id}>
+                  {ownProduct.name}
+                </option>
+              ))}
+            </select>
+            <span className="text-xs text-zinc-500">This keeps the competitor in the right product list.</span>
+          </label>
           <label className="block space-y-2">
             <span className="text-sm text-zinc-400">Name</span>
             <input

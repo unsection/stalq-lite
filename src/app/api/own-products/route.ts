@@ -29,6 +29,10 @@ export const POST = async (request: Request) => {
         sku: input.sku,
         url: input.url,
         price: input.price.toFixed(2),
+        costPerUnit: input.costPerUnit?.toFixed(2),
+        marketplaceFeePercent: input.marketplaceFeePercent?.toFixed(2),
+        shippingCostPerUnit: input.shippingCostPerUnit?.toFixed(2),
+        targetMarginPercent: input.targetMarginPercent?.toFixed(2),
       })
       .returning();
 

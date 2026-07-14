@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { db } from "@/db";
-import { priceHistory, products, scrapeLogs } from "@/db/schema";
+import { ownProducts, priceHistory, products, scrapeLogs } from "@/db/schema";
 import ProductDetailClient from "@/components/ProductDetailClient";
 
 export const dynamic = "force-dynamic";
@@ -24,13 +24,13 @@ const ProductPage = async ({ params }: ProductPageProps) => {
     .where(eq(priceHistory.productId, id))
     .orderBy(priceHistory.scrapedAt);
 
-  const logs = await db
+  const [logs, ownProductRows] = await Promise.all([db
     .select()
     .from(scrapeLogs)
     .where(eq(scrapeLogs.productId, id))
-    .orderBy(scrapeLogs.createdAt);
+    .orderBy(scrapeLogs.createdAt), db.select().from(ownProducts)]);
 
-  return <ProductDetailClient product={product} history={history} logs={logs} />;
+  return <ProductDetailClient product={product} history={history} logs={logs} ownProducts={ownProductRows} />;
 };
 
 export default ProductPage;
