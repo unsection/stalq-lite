@@ -26,7 +26,7 @@ const main = async () => {
       [
         schedule.id,
         schedule.task,
-        schedule.cron,
+        schedule.generator.expression,
         schedule.timezone,
         `active=${schedule.active}`,
         schedule.externalId,
