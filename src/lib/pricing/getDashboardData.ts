@@ -8,8 +8,15 @@ import {
   type PriceMovement,
 } from "./movement";
 
+export type TrackerHistoryPoint = {
+  price: number;
+  scrapedAt: string;
+};
+
 export type TrackerProduct = Product & {
   movement: PriceMovement;
+  /** Price observations used for the 30-day competitor strip. */
+  history: TrackerHistoryPoint[];
 };
 
 export type DashboardData = {
@@ -35,13 +42,21 @@ export const getDashboardData = async (): Promise<DashboardData> => {
     historyByProduct.set(row.productId, points);
   }
 
-  const trackerProducts: TrackerProduct[] = productRows.map((product) => ({
-    ...product,
-    movement: computePriceMovement(
-      historyByProduct.get(product.id) ?? [],
-      product.currentPrice ? Number(product.currentPrice) : null,
-    ),
-  }));
+  const trackerProducts: TrackerProduct[] = productRows.map((product) => {
+    const points = historyByProduct.get(product.id) ?? [];
+
+    return {
+      ...product,
+      movement: computePriceMovement(
+        points,
+        product.currentPrice ? Number(product.currentPrice) : null,
+      ),
+      history: points.map((point) => ({
+        price: point.price,
+        scrapedAt: point.scrapedAt.toISOString(),
+      })),
+    };
+  });
 
   return {
     products: trackerProducts,

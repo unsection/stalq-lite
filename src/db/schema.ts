@@ -1,6 +1,7 @@
 import {
   boolean,
   integer,
+  jsonb,
   numeric,
   pgEnum,
   pgTable,
@@ -63,6 +64,8 @@ export const scrapeLogs = pgTable("scrape_logs", {
   finishReason: text("finish_reason"),
   country: text("country"),
   waitForMs: integer("wait_for_ms"),
+  /** Full Context.dev scrape response JSON (dev tooling; not selected in list queries). */
+  scrapeResponse: jsonb("scrape_response"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -105,11 +108,37 @@ export const scheduleSettings = pgTable("schedule_settings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const aiSettings = pgTable("ai_settings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  openrouterApiKey: text("openrouter_api_key"),
+  model: text("model").notNull().default("~openai/gpt-mini-latest"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * Reusable Context.dev rules for every product from the same website.
+ * The method-specific fields live in `settings` so new Context.dev options do not
+ * require a database change each time they are added.
+ */
+export const websiteScrapeSettings = pgTable("website_scrape_settings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  domain: text("domain").notNull().unique(),
+  method: text("method").notNull(),
+  settings: jsonb("settings").notNull().default({}),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
 export type PriceHistoryRow = typeof priceHistory.$inferSelect;
 export type ScrapeLog = typeof scrapeLogs.$inferSelect;
 export type ScheduleSettings = typeof scheduleSettings.$inferSelect;
 export type NewScheduleSettings = typeof scheduleSettings.$inferInsert;
+export type AiSettings = typeof aiSettings.$inferSelect;
+export type NewAiSettings = typeof aiSettings.$inferInsert;
 export type OwnProduct = typeof ownProducts.$inferSelect;
 export type NewOwnProduct = typeof ownProducts.$inferInsert;
+export type WebsiteScrapeSetting = typeof websiteScrapeSettings.$inferSelect;
+export type NewWebsiteScrapeSetting = typeof websiteScrapeSettings.$inferInsert;

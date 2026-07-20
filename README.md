@@ -1,12 +1,12 @@
 # Stalq
 
-Price monitoring built with Next.js, Neon Postgres, and Context.dev HTML scraping.
+Price monitoring built with Next.js, Neon Postgres, Context.dev HTML scraping, and OpenRouter price decisions.
 
 ## Features
 
 - Add product URLs with per-product scrape settings
 - On-demand scraping via Context.dev `GET /v1/web/scrape/html`
-- Price extraction from scraped HTML (JSON-LD, meta tags, selectors)
+- AI price extraction from scraped HTML using OpenRouter `~openai/gpt-mini-latest`
 - Price tracker dashboard with movement, sparklines, and change stats
 - Global scheduled checks (once or twice daily) via Trigger.dev cron schedules
 - Dark Logs page with activity chart and dense scrape log table
@@ -38,6 +38,7 @@ Required variables:
 - `DATABASE_URL` — Neon **pooled** connection string (`-pooler` hostname)
 - `DATABASE_URL_UNPOOLED` — Neon **direct** connection string (for migrations)
 - `CONTEXT_DEV_API_KEY` — from [context.dev](https://context.dev) dashboard
+- `OPENROUTER_API_KEY` — from [OpenRouter](https://openrouter.ai/keys); used to decide the current product price from scraped HTML
 - `TRIGGER_SECRET_KEY` — Trigger.dev API key (dashboard → API keys)
 - `TRIGGER_PROJECT_REF` — Trigger.dev project ref (dashboard → Project settings)
 
@@ -91,7 +92,7 @@ automatically by the Vercel integration).
 
 ## Scrape settings
 
-Each product stores Context.dev HTML scrape parameters:
+Each product stores Context.dev HTML scrape parameters. Website rules in Settings take priority; when a domain has no rule, Stalq uses Scrape HTML and sends the returned HTML to OpenRouter to select the current product price.
 
 - Main Content Only (`useMainContentOnly`)
 - Settle Animations (`settleAnimations`)

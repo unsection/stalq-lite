@@ -2,11 +2,14 @@ import { neon } from "@neondatabase/serverless";
 import { readdirSync, readFileSync } from "fs";
 import { resolve } from "path";
 import { config } from "dotenv";
+import { configureNeonNetwork } from "../src/lib/neon/configureNetwork";
 
 config({ path: ".env.local" });
 config({ path: ".env" });
 
 const run = async () => {
+  configureNeonNetwork();
+
   const connectionString =
     process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL;
 

@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { products, scrapeLogs } from "@/db/schema";
@@ -38,7 +38,19 @@ export const GET = async (request: Request) => {
 
   const rows = await db
     .select({
-      log: scrapeLogs,
+      id: scrapeLogs.id,
+      productId: scrapeLogs.productId,
+      status: scrapeLogs.status,
+      price: scrapeLogs.price,
+      currency: scrapeLogs.currency,
+      durationMs: scrapeLogs.durationMs,
+      creditsConsumed: scrapeLogs.creditsConsumed,
+      errorMessage: scrapeLogs.errorMessage,
+      finishReason: scrapeLogs.finishReason,
+      country: scrapeLogs.country,
+      waitForMs: scrapeLogs.waitForMs,
+      createdAt: scrapeLogs.createdAt,
+      hasScrapeResponse: sql<boolean>`${scrapeLogs.scrapeResponse} is not null`,
       productName: products.name,
       productDomain: products.domain,
       productUrl: products.url,
@@ -53,10 +65,8 @@ export const GET = async (request: Request) => {
     range,
     tab,
     logs: rows.map((row) => ({
-      ...row.log,
-      productName: row.productName,
-      productDomain: row.productDomain,
-      productUrl: row.productUrl,
+      ...row,
+      hasScrapeResponse: Boolean(row.hasScrapeResponse),
     })),
   });
 };

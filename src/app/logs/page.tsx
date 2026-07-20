@@ -49,7 +49,19 @@ const LogsPageContent = async ({ searchParams }: LogsPageProps) => {
 
   const logs = await db
     .select({
-      log: scrapeLogs,
+      id: scrapeLogs.id,
+      productId: scrapeLogs.productId,
+      status: scrapeLogs.status,
+      price: scrapeLogs.price,
+      currency: scrapeLogs.currency,
+      durationMs: scrapeLogs.durationMs,
+      creditsConsumed: scrapeLogs.creditsConsumed,
+      errorMessage: scrapeLogs.errorMessage,
+      finishReason: scrapeLogs.finishReason,
+      country: scrapeLogs.country,
+      waitForMs: scrapeLogs.waitForMs,
+      createdAt: scrapeLogs.createdAt,
+      hasScrapeResponse: sql<boolean>`${scrapeLogs.scrapeResponse} is not null`,
       productName: products.name,
       productDomain: products.domain,
       productUrl: products.url,
@@ -78,10 +90,8 @@ const LogsPageContent = async ({ searchParams }: LogsPageProps) => {
   return (
     <LogsPageClient
       logs={logs.map((row) => ({
-        ...row.log,
-        productName: row.productName,
-        productDomain: row.productDomain,
-        productUrl: row.productUrl,
+        ...row,
+        hasScrapeResponse: Boolean(row.hasScrapeResponse),
       }))}
       series={seriesData}
       range={range}

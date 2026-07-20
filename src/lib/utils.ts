@@ -21,7 +21,8 @@ export const formatDuration = (ms: number | null | undefined) => {
 
 export const extractDomain = (url: string) => {
   try {
-    return new URL(url).hostname.replace(/^www\./, "");
+    const normalizedUrl = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    return new URL(normalizedUrl).hostname.replace(/^www\./, "");
   } catch {
     return url;
   }

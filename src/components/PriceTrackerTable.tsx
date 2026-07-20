@@ -7,6 +7,7 @@ import {
   ArrowSquareOut,
   ArrowUpRight,
   ArrowsClockwise,
+  CircleNotch,
   DotsThree,
   Eye,
   Plus,
@@ -15,14 +16,18 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { TrackerProduct } from "@/lib/pricing/getDashboardData";
-import type { OwnProduct } from "@/db/schema";
+import type { OwnProduct, Product } from "@/db/schema";
 import { calculateMargin } from "@/lib/pricing/margin";
+import { UNREGISTERED_SITE_SCRAPE_DEFAULTS } from "@/lib/scrape/defaultScrapeSettings";
 import {
   cn,
+  extractDomain,
   formatPrice,
   getFaviconUrl,
   mockInStock,
 } from "@/lib/utils";
+import { PriceHistoryStrip } from "@/components/PriceHistoryStrip";
+import { TrackCompetitorModal } from "@/components/TrackCompetitorModal";
 
 type PriceTrackerTableProps = {
   products: TrackerProduct[];
@@ -30,6 +35,8 @@ type PriceTrackerTableProps = {
 };
 
 type SortKey = "name" | "price" | "change" | "lastScraped";
+
+type PendingCompetitor = Pick<Product, "id" | "name" | "url" | "domain">;
 
 const PriceChange = ({
   direction,
@@ -62,6 +69,50 @@ const PriceChange = ({
 
 const menuItemClass =
   "flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-800 disabled:opacity-50";
+
+const ScrapingCompetitorCard = ({
+  domain,
+  url,
+  isDeleting,
+  onDelete,
+}: {
+  domain: string;
+  url: string;
+  isDeleting: boolean;
+  onDelete: () => void;
+}) => {
+  return (
+    <article className="flex min-h-52 flex-col rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-800">
+          <CircleNotch className="h-5 w-5 animate-spin text-zinc-500" weight="bold" />
+        </div>
+
+        <div className="min-w-0 flex-1 space-y-1">
+          <p className="line-clamp-1 font-medium leading-tight text-white">{domain}</p>
+          <p className="truncate text-xs leading-tight text-zinc-500">{url}</p>
+        </div>
+
+        <button
+          type="button"
+          onClick={onDelete}
+          disabled={isDeleting}
+          aria-label={`Delete competitor ${domain}`}
+          className="shrink-0 rounded-md p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300 disabled:opacity-50"
+        >
+          <Trash className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="flex-1" />
+
+      <div className="mt-4 flex items-center gap-2 border-t border-zinc-800 pt-3">
+        <CircleNotch className="h-3.5 w-3.5 animate-spin text-zinc-500" weight="bold" />
+        <span className="text-sm text-zinc-500">Scraping page...</span>
+      </div>
+    </article>
+  );
+};
 
 const ProductCard = ({
   product,
@@ -110,6 +161,17 @@ const ProductCard = ({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [menuOpen]);
+
+  if (isScraping) {
+    return (
+      <ScrapingCompetitorCard
+        domain={product.domain}
+        url={product.url}
+        isDeleting={isDeleting}
+        onDelete={() => onDelete(product.id)}
+      />
+    );
+  }
 
   const handleScrapeClick = () => {
     setMenuOpen(false);
@@ -234,6 +296,17 @@ const ProductCard = ({
         </span>
       </p>
 
+      <PriceHistoryStrip
+        className="mt-4"
+        history={product.history.map((point) => ({
+          price: point.price,
+          scrapedAt: new Date(point.scrapedAt),
+        }))}
+        yourPrice={Number(ownProduct.price)}
+        competitorPrice={movement.current}
+        currency={currency}
+      />
+
       <div className="mt-4 flex items-center justify-between gap-3 border-t border-zinc-800 pt-3">
         <span
           className={cn(
@@ -257,12 +330,20 @@ const ProductCard = ({
 
 export const PriceTrackerTable = ({ products, ownProduct }: PriceTrackerTableProps) => {
   const router = useRouter();
+  const [trackOpen, setTrackOpen] = useState(false);
+  const [pending, setPending] = useState<PendingCompetitor[]>([]);
   const [scrapingId, setScrapingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("change");
   const [sortAsc, setSortAsc] = useState(false);
 
-  const handleScrape = async (productId: string) => {
+  // Drop pending placeholders once the server list includes them (after refresh).
+  useEffect(() => {
+    const ids = new Set(products.map((product) => product.id));
+    setPending((current) => current.filter((item) => !ids.has(item.id)));
+  }, [products]);
+
+  const runScrape = async (productId: string) => {
     setScrapingId(productId);
     try {
       const response = await fetch(`/api/products/${productId}/scrape`, { method: "POST" });
@@ -270,12 +351,16 @@ export const PriceTrackerTable = ({ products, ownProduct }: PriceTrackerTablePro
         const payload = await response.json().catch(() => ({}));
         throw new Error(payload.message ?? "Scrape failed");
       }
-      router.refresh();
     } catch (error) {
       alert(error instanceof Error ? error.message : "Scrape failed");
     } finally {
       setScrapingId(null);
+      router.refresh();
     }
+  };
+
+  const handleScrape = async (productId: string) => {
+    await runScrape(productId);
   };
 
   const handleDelete = async (productId: string) => {
@@ -286,6 +371,7 @@ export const PriceTrackerTable = ({ products, ownProduct }: PriceTrackerTablePro
       if (!response.ok) {
         throw new Error("Failed to delete product");
       }
+      setPending((current) => current.filter((item) => item.id !== productId));
       router.refresh();
     } catch (error) {
       alert(error instanceof Error ? error.message : "Delete failed");
@@ -294,14 +380,52 @@ export const PriceTrackerTable = ({ products, ownProduct }: PriceTrackerTablePro
     }
   };
 
+  const handleAddCompetitor = async (url: string) => {
+    const domain = extractDomain(url);
+    const defaults = UNREGISTERED_SITE_SCRAPE_DEFAULTS;
+
+    const response = await fetch("/api/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ownProductId: ownProduct.id,
+        name: domain,
+        url,
+        useMainContentOnly: defaults.useMainContentOnly,
+        settleAnimations: defaults.settleAnimations,
+        includeSelectors: defaults.includeSelectors,
+        excludeSelectors: defaults.excludeSelectors,
+        country: defaults.country,
+        waitForMs: defaults.waitForMs,
+        timeoutEnabled: defaults.timeoutEnabled,
+        timeoutMs: defaults.timeoutMs,
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data?.message ?? "Failed to add competitor");
+    }
+
+    const created = data as Product;
+    setPending((current) => [
+      ...current,
+      { id: created.id, name: created.name, url: created.url, domain: created.domain },
+    ]);
+
+    void runScrape(created.id);
+  };
+
   const handleSortChange = (value: string) => {
     const [key, direction] = value.split(":") as [SortKey, "asc" | "desc"];
     setSortKey(key);
     setSortAsc(direction === "asc");
   };
 
-  const sortedProducts = useMemo(() => {
-    const rows = [...products];
+  const pendingIds = useMemo(() => new Set(pending.map((item) => item.id)), [pending]);
+
+  const displayedProducts = useMemo(() => {
+    const rows = products.filter((product) => !pendingIds.has(product.id));
     rows.sort((a, b) => {
       let cmp = 0;
       switch (sortKey) {
@@ -323,16 +447,17 @@ export const PriceTrackerTable = ({ products, ownProduct }: PriceTrackerTablePro
       return sortAsc ? cmp : -cmp;
     });
     return rows;
-  }, [products, sortAsc, sortKey]);
+  }, [products, sortAsc, sortKey, pendingIds]);
 
   const sortValue = `${sortKey}:${sortAsc ? "asc" : "desc"}`;
+  const competitorCount = displayedProducts.length + pending.length;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-white">Competitors</h2>
-          <p className="text-sm text-zinc-500">{products.length} tracked for {ownProduct.name}</p>
+          <p className="text-sm text-zinc-500">{competitorCount} tracked for {ownProduct.name}</p>
         </div>
         <label className="flex items-center gap-2 text-sm text-zinc-500">
           <span className="sr-only">Sort by</span>
@@ -353,7 +478,7 @@ export const PriceTrackerTable = ({ products, ownProduct }: PriceTrackerTablePro
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {sortedProducts.map((product) => (
+        {displayedProducts.map((product) => (
           <ProductCard
             key={product.id}
             product={product}
@@ -364,8 +489,18 @@ export const PriceTrackerTable = ({ products, ownProduct }: PriceTrackerTablePro
             onDelete={handleDelete}
           />
         ))}
-        <Link
-          href={`/products/new?ownProductId=${ownProduct.id}`}
+        {pending.map((item) => (
+          <ScrapingCompetitorCard
+            key={item.id}
+            domain={item.domain}
+            url={item.url}
+            isDeleting={deletingId === item.id}
+            onDelete={() => handleDelete(item.id)}
+          />
+        ))}
+        <button
+          type="button"
+          onClick={() => setTrackOpen(true)}
           aria-label={`Add a competitor link for ${ownProduct.name}`}
           className="flex min-h-52 flex-col items-center justify-center rounded-xl border border-dashed border-zinc-700 bg-zinc-950 p-4 text-center transition-colors hover:border-[#0080FF]/70 hover:bg-zinc-900"
         >
@@ -374,8 +509,15 @@ export const PriceTrackerTable = ({ products, ownProduct }: PriceTrackerTablePro
           </span>
           <span className="mt-3 text-sm font-medium text-zinc-200">Add competitor link</span>
           <span className="mt-1 text-xs text-zinc-500">Paste any product URL</span>
-        </Link>
+        </button>
       </div>
+
+      <TrackCompetitorModal
+        open={trackOpen}
+        ownProductName={ownProduct.name}
+        onClose={() => setTrackOpen(false)}
+        onSubmit={handleAddCompetitor}
+      />
     </div>
   );
 };
