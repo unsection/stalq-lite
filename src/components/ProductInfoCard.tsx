@@ -3,6 +3,7 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   Clock,
+  PencilSimple,
   Plus,
   SlidersHorizontal,
   UsersThree,
@@ -40,6 +41,7 @@ type ProductInfoCardProps = {
   competitors: TrackerProduct[];
   onAddProduct?: () => void;
   onEditCosts?: () => void;
+  onEditProduct?: () => void;
 };
 
 export const ProductInfoCard = ({
@@ -47,6 +49,7 @@ export const ProductInfoCard = ({
   competitors,
   onAddProduct,
   onEditCosts,
+  onEditProduct,
 }: ProductInfoCardProps) => {
   if (!product) {
     return (
@@ -133,6 +136,15 @@ export const ProductInfoCard = ({
           >
             <SlidersHorizontal className="h-4 w-4 text-zinc-400" weight="duotone" />
             Cost {formatPrice(costPerUnit, currency)}
+          </button>
+          <button
+            type="button"
+            onClick={onEditProduct}
+            aria-label={`Edit ${product.name}`}
+            className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-200 transition-colors hover:border-zinc-700 hover:bg-zinc-800"
+          >
+            <PencilSimple className="h-4 w-4 text-zinc-400" weight="duotone" />
+            Edit
           </button>
         </div>
       </div>

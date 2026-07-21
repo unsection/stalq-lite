@@ -464,7 +464,7 @@ export const PriceTrackerTable = ({ products, ownProduct }: PriceTrackerTablePro
           <select
             value={sortValue}
             onChange={(event) => handleSortChange(event.target.value)}
-            className="rounded-md border border-zinc-800 bg-zinc-950 px-2.5 py-1.5 text-sm text-zinc-300 outline-none hover:border-zinc-700 focus:border-zinc-600"
+            className="bg-transparent px-0 py-1.5 text-sm text-zinc-300 outline-none ring-0 focus:outline-none focus:ring-0"
             aria-label="Sort products"
           >
             <option value="change:desc">Biggest change</option>

@@ -5,7 +5,7 @@ export const maxDuration = 300;
 
 export const POST = async () => {
   try {
-    const summary = await scrapeAllProducts();
+    const { summary } = await scrapeAllProducts();
     return NextResponse.json({ ok: true, summary });
   } catch (error) {
     return NextResponse.json(

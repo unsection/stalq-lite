@@ -1,4 +1,9 @@
+import { inArray } from "drizzle-orm";
 import { schedules } from "@trigger.dev/sdk";
+import { db } from "@/db";
+import { ownProducts } from "@/db/schema";
+import { detectUndercuts } from "@/lib/alerts/detectUndercuts";
+import { sendUndercutEmail } from "@/lib/alerts/sendUndercutEmail";
 import {
   getScheduleSettings,
   markScheduleRun,
@@ -24,9 +29,49 @@ export const scheduledScrapeTask = schedules.task({
     }
 
     const slotKey = formatSlotKey(payload.timestamp, settings.timezone);
-    const summary = await scrapeAllProducts();
+    const { summary, results } = await scrapeAllProducts();
     await markScheduleRun(slotKey);
 
-    return { ran: true, slotKey, summary };
+    const ownProductIds = [
+      ...new Set(
+        results
+          .map((result) => result.ownProductId)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    ];
+
+    let alertsSent = 0;
+    let alertsFound = 0;
+
+    if (ownProductIds.length > 0) {
+      const ownRows = await db
+        .select({
+          id: ownProducts.id,
+          name: ownProducts.name,
+          price: ownProducts.price,
+          currency: ownProducts.currency,
+        })
+        .from(ownProducts)
+        .where(inArray(ownProducts.id, ownProductIds));
+
+      const alerts = detectUndercuts(results, ownRows);
+      alertsFound = alerts.length;
+
+      if (alerts.length > 0) {
+        try {
+          const emailResult = await sendUndercutEmail(alerts);
+          if (emailResult.sent) {
+            alertsSent = alerts.length;
+          }
+        } catch (error) {
+          console.error(
+            "[scheduled-scrape] Undercut email failed:",
+            error instanceof Error ? error.message : error,
+          );
+        }
+      }
+    }
+
+    return { ran: true, slotKey, summary, alertsFound, alertsSent };
   },
 });

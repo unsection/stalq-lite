@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { OwnProduct } from "@/db/schema";
 import { AddOwnProductModal } from "@/components/AddOwnProductModal";
+import { EditOwnProductModal } from "@/components/EditOwnProductModal";
 import { MarginCostsModal } from "@/components/MarginCostsModal";
 import { ProductInfoCard } from "@/components/ProductInfoCard";
 import { ProductToolbar } from "@/components/ProductToolbar";
@@ -31,6 +32,7 @@ export const ProductWorkspace = ({ ownProducts, competitors }: ProductWorkspaceP
   const [selectedId, setSelectedId] = useState<string | null>(ownProducts[0]?.id ?? null);
   const [addOpen, setAddOpen] = useState(false);
   const [costsOpen, setCostsOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const selected = products.find((product) => product.id === selectedId) ?? null;
   const selectedCompetitors = competitors.filter((competitor) => competitor.ownProductId === selected?.id);
@@ -45,7 +47,7 @@ export const ProductWorkspace = ({ ownProducts, competitors }: ProductWorkspaceP
     router.refresh();
   };
 
-  const handleCostsSaved = (updatedProduct: OwnProduct) => {
+  const handleProductSaved = (updatedProduct: OwnProduct) => {
     setProducts((current) => current.map((product) => (product.id === updatedProduct.id ? updatedProduct : product)));
     router.refresh();
   };
@@ -63,14 +65,21 @@ export const ProductWorkspace = ({ ownProducts, competitors }: ProductWorkspaceP
         competitors={selectedCompetitors}
         onAddProduct={handleAddProduct}
         onEditCosts={() => setCostsOpen(true)}
+        onEditProduct={() => setEditOpen(true)}
       />
       {selected ? <PriceTrackerTable products={selectedCompetitors} ownProduct={selected} /> : null}
       <AddOwnProductModal open={addOpen} onClose={handleCloseAdd} onCreated={handleCreated} />
+      <EditOwnProductModal
+        product={selected}
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        onSaved={handleProductSaved}
+      />
       <MarginCostsModal
         product={selected}
         open={costsOpen}
         onClose={() => setCostsOpen(false)}
-        onSaved={handleCostsSaved}
+        onSaved={handleProductSaved}
       />
     </>
   );

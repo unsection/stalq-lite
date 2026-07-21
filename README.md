@@ -41,6 +41,9 @@ Required variables:
 - `OPENROUTER_API_KEY` — from [OpenRouter](https://openrouter.ai/keys); used to decide the current product price from scraped HTML
 - `TRIGGER_SECRET_KEY` — Trigger.dev API key (dashboard → API keys)
 - `TRIGGER_PROJECT_REF` — Trigger.dev project ref (dashboard → Project settings)
+- `RESEND_API_KEY` — from [Resend](https://resend.com) (for scheduled undercut alert emails)
+- `ALERT_EMAIL_FROM` — verified sender, e.g. `alerts@yourdomain.com` (or `onboarding@resend.dev` for testing)
+- `ALERT_EMAIL_TO` — recipient for price undercut digest emails
 
 3. Apply the database schema:
 
@@ -87,8 +90,13 @@ For local testing of batch scrape, use **Run all now** on the Settings page (`PO
    execute locally
 5. Re-save the schedule in **Settings** once after setup to create the schedules
 
-The task needs `DATABASE_URL` and `CONTEXT_DEV_API_KEY` available in Trigger.dev (synced
-automatically by the Vercel integration).
+The task needs `DATABASE_URL`, `CONTEXT_DEV_API_KEY`, and (for email alerts) `RESEND_API_KEY`,
+`ALERT_EMAIL_FROM`, and `ALERT_EMAIL_TO` available in Trigger.dev (synced automatically by the
+Vercel integration, or set manually in the Trigger.dev dashboard).
+
+After each scheduled scrape, Stalq emails a digest when any competitor **dropped** and is now
+**strictly cheaper** than the linked own product. No email is sent when nothing qualifies.
+Manual **Run all now** scrapes do not send email.
 
 ## Scrape settings
 

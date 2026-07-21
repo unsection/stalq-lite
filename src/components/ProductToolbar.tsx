@@ -5,7 +5,6 @@ import {
   ArrowSquareOut,
   CaretDown,
   Package,
-  ShareNetwork,
   SquaresFour,
 } from "@phosphor-icons/react";
 import { BrowseCatalogDrawer } from "@/components/BrowseCatalogDrawer";
@@ -53,18 +52,6 @@ export const ProductToolbar = ({
     window.open(selected.url, "_blank", "noopener,noreferrer");
   };
 
-  const handleShare = async () => {
-    if (!selected) return;
-    const url = selected.url ?? undefined;
-
-    if (navigator.share) {
-      await navigator.share({ title: selected.name, url });
-      return;
-    }
-
-    if (url) await navigator.clipboard.writeText(url);
-  };
-
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -110,28 +97,16 @@ export const ProductToolbar = ({
           </span>
         </div>
 
-        {selected ? (
+        {selected?.url ? (
           <div className="flex items-center gap-2">
-            {selected.url ? (
-              <button
-                type="button"
-                onClick={handleVisit}
-                aria-label={`Visit ${selected.name}`}
-                className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-950 px-3 py-2 text-base text-zinc-200 transition-colors hover:border-zinc-700 hover:bg-zinc-900"
-              >
-                <ArrowSquareOut className="h-4 w-4 shrink-0 text-zinc-400" weight="duotone" />
-                <span>Visit</span>
-              </button>
-            ) : null}
-
             <button
               type="button"
-              onClick={handleShare}
-              aria-label={`Share ${selected.name}`}
-              className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-950 px-3 py-2 text-base text-zinc-200 transition-colors hover:border-zinc-700 hover:bg-zinc-900"
+              onClick={handleVisit}
+              aria-label={`Visit ${selected.name}`}
+              className="inline-flex items-center gap-2 bg-transparent px-0 py-2 text-base text-zinc-300 outline-none ring-0 transition-colors hover:text-white focus:outline-none focus:ring-0"
             >
-              <ShareNetwork className="h-4 w-4 shrink-0 text-zinc-400" weight="duotone" />
-              <span>Share</span>
+              <ArrowSquareOut className="h-4 w-4 shrink-0 text-zinc-400" weight="duotone" />
+              <span>Visit</span>
             </button>
           </div>
         ) : null}
