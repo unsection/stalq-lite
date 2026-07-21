@@ -1,5 +1,3 @@
-import { format, startOfDay, subDays } from "date-fns";
-
 export type StripDayStatus = "above" | "below" | "same" | "none";
 
 export type PriceHistoryPoint = {
@@ -8,6 +6,7 @@ export type PriceHistoryPoint = {
 };
 
 export type StripDay = {
+  /** UTC midnight for this calendar day. */
   date: Date;
   competitorPrice: number | null;
   yourPrice: number;
@@ -28,12 +27,24 @@ export const compareCompetitorToOwn = (
   return difference > 0 ? "above" : "below";
 };
 
-const dayKey = (date: Date) => format(date, "yyyy-MM-dd");
+/** Calendar day key in UTC — stable across SSR and the browser. */
+export const utcDayKey = (date: Date) => date.toISOString().slice(0, 10);
+
+const startOfUtcDay = (date: Date) =>
+  new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+
+const subUtcDays = (date: Date, amount: number) =>
+  new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() - amount),
+  );
 
 /**
- * Build one bar per calendar day for the last `dayCount` days (oldest → newest).
- * Multiple scrapes on the same day use the last price that day.
+ * Build one bar per UTC calendar day for the last `dayCount` days (oldest → newest).
+ * Multiple scrapes on the same UTC day use the last price that day.
  * Each day is compared against the current own price.
+ *
+ * Days are keyed in UTC so server HTML and client hydration never disagree
+ * (local `startOfDay` / `format` would shift bars for users outside UTC).
  */
 export const buildPriceHistoryStripDays = (
   history: PriceHistoryPoint[],
@@ -52,14 +63,14 @@ export const buildPriceHistoryStripDays = (
   );
 
   for (const point of sorted) {
-    priceByDay.set(dayKey(point.scrapedAt), point.price);
+    priceByDay.set(utcDayKey(point.scrapedAt), point.price);
   }
 
   const days: StripDay[] = [];
 
   for (let offset = dayCount - 1; offset >= 0; offset -= 1) {
-    const date = startOfDay(subDays(now, offset));
-    const competitorPrice = priceByDay.get(dayKey(date)) ?? null;
+    const date = startOfUtcDay(subUtcDays(now, offset));
+    const competitorPrice = priceByDay.get(utcDayKey(date)) ?? null;
 
     if (competitorPrice == null) {
       days.push({
@@ -84,3 +95,12 @@ export const buildPriceHistoryStripDays = (
 
   return days;
 };
+
+/** Format a UTC-midnight strip day for tooltips (e.g. "Tue, Jul 21"). */
+export const formatStripDayLabel = (date: Date) =>
+  new Intl.DateTimeFormat("en-US", {
+    timeZone: "UTC",
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  }).format(date);

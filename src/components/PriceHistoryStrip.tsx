@@ -1,9 +1,10 @@
 "use client";
 
-import { format } from "date-fns";
 import { useId, useState } from "react";
 import {
   buildPriceHistoryStripDays,
+  formatStripDayLabel,
+  utcDayKey,
   type PriceHistoryPoint,
   type StripDay,
   type StripDayStatus,
@@ -38,9 +39,18 @@ const differenceToneClass: Record<Exclude<StripDayStatus, "none">, string> = {
   same: "text-orange-600",
 };
 
-const formatDifference = (day: StripDay, currency: string) => {
+const formatEmptyDayStatus = (day: StripDay, now: Date) => {
+  const isToday = utcDayKey(day.date) === utcDayKey(now);
+  return {
+    label: "Status",
+    value: isToday ? "Awaiting check" : "Not checked",
+    tone: "text-zinc-500",
+  };
+};
+
+const formatDifference = (day: StripDay, currency: string, now: Date) => {
   if (day.status === "none" || day.difference == null) {
-    return { label: "Difference", value: "No data", tone: "text-zinc-500" };
+    return formatEmptyDayStatus(day, now);
   }
 
   if (day.status === "same") {
@@ -71,11 +81,13 @@ const formatDifference = (day: StripDay, currency: string) => {
 const StripTooltip = ({
   day,
   currency,
+  now,
 }: {
   day: StripDay;
   currency: string;
+  now: Date;
 }) => {
-  const difference = formatDifference(day, currency);
+  const difference = formatDifference(day, currency, now);
 
   return (
     <div
@@ -83,7 +95,7 @@ const StripTooltip = ({
       className="w-52 rounded-xl border border-zinc-200 bg-white px-3.5 py-3 shadow-lg shadow-black/15"
     >
       <p className="text-sm font-semibold text-zinc-900">
-        {format(day.date, "EEE, MMM d")}
+        {formatStripDayLabel(day.date)}
       </p>
       <dl className="mt-2 space-y-1.5 text-sm">
         <div className="flex items-baseline justify-between gap-3">
@@ -100,7 +112,13 @@ const StripTooltip = ({
         </div>
         <div className="flex items-baseline justify-between gap-3">
           <dt className={difference.tone}>{difference.label}</dt>
-          <dd className={cn("num font-semibold", difference.tone)}>
+          <dd
+            className={cn(
+              "font-semibold",
+              difference.tone,
+              day.status !== "none" && "num",
+            )}
+          >
             {difference.value}
           </dd>
         </div>
@@ -118,7 +136,8 @@ export const PriceHistoryStrip = ({
 }: PriceHistoryStripProps) => {
   const labelId = useId();
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const days = buildPriceHistoryStripDays(history, yourPrice);
+  const now = new Date();
+  const days = buildPriceHistoryStripDays(history, yourPrice, { now });
   const activeDay = activeIndex == null ? null : days[activeIndex];
 
   const tooltipLeftPercent =
@@ -152,7 +171,7 @@ export const PriceHistoryStrip = ({
               transform: `translateX(${tooltipOffset})`,
             }}
           >
-            <StripTooltip day={activeDay} currency={currency} />
+            <StripTooltip day={activeDay} currency={currency} now={now} />
           </div>
         ) : null}
 
@@ -164,10 +183,10 @@ export const PriceHistoryStrip = ({
         >
           {days.map((day, index) => (
             <button
-              key={day.date.toISOString()}
+              key={utcDayKey(day.date)}
               type="button"
               tabIndex={0}
-              aria-label={`${format(day.date, "MMM d")}: ${statusLabel[day.status]}`}
+              aria-label={`${formatStripDayLabel(day.date)}: ${statusLabel[day.status]}`}
               className={cn(
                 "min-w-0 flex-1 rounded-full outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-[#0080FF]/70",
                 barClassByStatus[day.status],
