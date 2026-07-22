@@ -337,12 +337,6 @@ export const PriceTrackerTable = ({ products, ownProduct }: PriceTrackerTablePro
   const [sortKey, setSortKey] = useState<SortKey>("change");
   const [sortAsc, setSortAsc] = useState(false);
 
-  // Drop pending placeholders once the server list includes them (after refresh).
-  useEffect(() => {
-    const ids = new Set(products.map((product) => product.id));
-    setPending((current) => current.filter((item) => !ids.has(item.id)));
-  }, [products]);
-
   const runScrape = async (productId: string) => {
     setScrapingId(productId);
     try {
@@ -422,10 +416,13 @@ export const PriceTrackerTable = ({ products, ownProduct }: PriceTrackerTablePro
     setSortAsc(direction === "asc");
   };
 
-  const pendingIds = useMemo(() => new Set(pending.map((item) => item.id)), [pending]);
+  const visiblePending = useMemo(() => {
+    const productIds = new Set(products.map((product) => product.id));
+    return pending.filter((item) => !productIds.has(item.id));
+  }, [pending, products]);
 
   const displayedProducts = useMemo(() => {
-    const rows = products.filter((product) => !pendingIds.has(product.id));
+    const rows = [...products];
     rows.sort((a, b) => {
       let cmp = 0;
       switch (sortKey) {
@@ -447,10 +444,10 @@ export const PriceTrackerTable = ({ products, ownProduct }: PriceTrackerTablePro
       return sortAsc ? cmp : -cmp;
     });
     return rows;
-  }, [products, sortAsc, sortKey, pendingIds]);
+  }, [products, sortAsc, sortKey]);
 
   const sortValue = `${sortKey}:${sortAsc ? "asc" : "desc"}`;
-  const competitorCount = displayedProducts.length + pending.length;
+  const competitorCount = displayedProducts.length + visiblePending.length;
 
   return (
     <div className="space-y-4">
@@ -489,7 +486,7 @@ export const PriceTrackerTable = ({ products, ownProduct }: PriceTrackerTablePro
             onDelete={handleDelete}
           />
         ))}
-        {pending.map((item) => (
+        {visiblePending.map((item) => (
           <ScrapingCompetitorCard
             key={item.id}
             domain={item.domain}

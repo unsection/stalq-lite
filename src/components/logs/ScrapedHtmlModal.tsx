@@ -5,8 +5,7 @@ import { Copy, X } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/Button";
 
 type ScrapedHtmlModalProps = {
-  open: boolean;
-  logId: string | null;
+  logId: string;
   productLabel: string;
   onClose: () => void;
 };
@@ -49,23 +48,16 @@ const previewForDisplay = (
   };
 };
 
-export const ScrapedHtmlModal = ({ open, logId, productLabel, onClose }: ScrapedHtmlModalProps) => {
+export const ScrapedHtmlModal = ({ logId, productLabel, onClose }: ScrapedHtmlModalProps) => {
   const titleId = useId();
   const [fullPayload, setFullPayload] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [expandHtml, setExpandHtml] = useState(false);
 
   useEffect(() => {
-    if (!open || !logId) return;
-
     let cancelled = false;
-    setIsLoading(true);
-    setError(null);
-    setFullPayload(null);
-    setCopied(false);
-    setExpandHtml(false);
 
     const load = async () => {
       try {
@@ -97,11 +89,9 @@ export const ScrapedHtmlModal = ({ open, logId, productLabel, onClose }: Scraped
     return () => {
       cancelled = true;
     };
-  }, [open, logId]);
+  }, [logId]);
 
   useEffect(() => {
-    if (!open) return;
-
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
@@ -113,9 +103,7 @@ export const ScrapedHtmlModal = ({ open, logId, productLabel, onClose }: Scraped
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
     };
-  }, [open, onClose]);
-
-  if (!open) return null;
+  }, [onClose]);
 
   const handleBackdropClick = (event: MouseEvent<HTMLDivElement>) => {
     if (event.target === event.currentTarget) onClose();

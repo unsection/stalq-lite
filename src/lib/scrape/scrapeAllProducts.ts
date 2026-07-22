@@ -2,7 +2,7 @@ import { db } from "@/db";
 import { products } from "@/db/schema";
 import { runProductScrape } from "@/lib/scrape/runProductScrape";
 
-export type ScrapeAllSummary = {
+type ScrapeAllSummary = {
   total: number;
   success: number;
   no_price: number;

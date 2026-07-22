@@ -13,6 +13,9 @@
 # testing
 /coverage
 
+# Trigger.dev local build artifacts
+/.trigger/
+
 # next.js
 /.next/
 /out/

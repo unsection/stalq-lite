@@ -8,7 +8,7 @@ import {
   type PriceMovement,
 } from "./movement";
 
-export type TrackerHistoryPoint = {
+type TrackerHistoryPoint = {
   price: number;
   scrapedAt: string;
 };

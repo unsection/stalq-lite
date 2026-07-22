@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { scheduleSettings, type ScheduleSettings } from "@/db/schema";
 import { appendCompletedSlot } from "@/lib/schedule/slots";
 
-export const DEFAULT_SCHEDULE = {
+const DEFAULT_SCHEDULE = {
   enabled: false,
   frequency: 1,
   primaryTime: "09:00",

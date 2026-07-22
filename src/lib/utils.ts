@@ -32,15 +32,7 @@ export const extractDomain = (url: string) => {
 export const getFaviconUrl = (domain: string, size = 64) =>
   `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=${size}`;
 
-/** Deterministic mock helpers until margin/stock are scraped. */
-export const mockMarginPercent = (seed: string) => {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i += 1) {
-    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
-  }
-  return 20 + (hash % 350) / 10;
-};
-
+/** Deterministic stock placeholder until stock is scraped. */
 export const mockInStock = (seed: string) => {
   let hash = 0;
   for (let i = 0; i < seed.length; i += 1) {

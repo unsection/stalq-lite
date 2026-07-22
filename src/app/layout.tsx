@@ -26,8 +26,8 @@ export default function RootLayout({
         <PhosphorProvider>
           <div className="flex min-h-full">
             <AppSidebar />
-            <main className="min-w-0 flex-1 overflow-x-auto">
-              <div className="mx-auto w-full max-w-[1400px] px-6 py-8">{children}</div>
+            <main className="min-w-0 flex-1 overflow-x-clip">
+              <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">{children}</div>
             </main>
           </div>
         </PhosphorProvider>

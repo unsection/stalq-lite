@@ -16,7 +16,7 @@ export type StripDay = {
 };
 
 /** Treat prices within a cent as equal. */
-export const PRICE_EQUALITY_TOLERANCE = 0.01;
+const PRICE_EQUALITY_TOLERANCE = 0.01;
 
 export const compareCompetitorToOwn = (
   competitorPrice: number,

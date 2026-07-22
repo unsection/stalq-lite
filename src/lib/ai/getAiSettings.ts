@@ -3,8 +3,6 @@ import { db } from "@/db";
 import { aiSettings, type AiSettings } from "@/db/schema";
 import { DEFAULT_AI_MODEL } from "@/lib/ai/constants";
 
-export { DEFAULT_AI_MODEL };
-
 export const getAiSettings = async (): Promise<AiSettings> => {
   const [existing] = await db.select().from(aiSettings).limit(1);
 

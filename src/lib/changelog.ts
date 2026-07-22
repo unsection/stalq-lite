@@ -1,4 +1,4 @@
-export type ChangelogSection = {
+type ChangelogSection = {
   heading: string;
   items: string[];
 };
@@ -12,6 +12,39 @@ export type ChangelogEntry = {
 };
 
 export const changelogEntries: ChangelogEntry[] = [
+  {
+    version: "0.2.0",
+    postedAt: "2026-07-23",
+    title: "Price history, smarter checks, and undercut alerts",
+    summary:
+      "See how your price compares over time, make safer margin decisions, and get notified when a competitor drops below you.",
+    sections: [
+      {
+        heading: "A clearer pricing picture",
+        items: [
+          "Compare your price with the cheapest competitor across a 14-day chart.",
+          "See break-even and target-margin price levels directly on the chart before changing your price.",
+          "Use the improved mobile layout to review products and pricing without horizontal scrolling.",
+        ],
+      },
+      {
+        heading: "Smarter competitor checks",
+        items: [
+          "Choose the best checking method for each website, including page content, structured extraction, or screenshots.",
+          "Use AI-assisted price extraction for websites where the price is difficult to identify reliably.",
+          "Keep daily price history accurate when a competitor is checked more than once in the same day.",
+        ],
+      },
+      {
+        heading: "Automatic undercut alerts",
+        items: [
+          "Receive an email after scheduled checks when a competitor lowers its price below yours.",
+          "See the old price, new price, your price, and the size of the gap in one alert.",
+          "Avoid duplicate schedule conflicts between development and production environments.",
+        ],
+      },
+    ],
+  },
   {
     version: "0.1.0",
     postedAt: "2026-07-14",

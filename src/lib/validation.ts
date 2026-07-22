@@ -28,7 +28,7 @@ export const productInputSchema = z.object({
 
 export type ProductInput = z.infer<typeof productInputSchema>;
 
-export const scrapeMethodSchema = z.enum(["html", "extract", "screenshot"]);
+const scrapeMethodSchema = z.enum(["html", "extract", "screenshot"]);
 export type ScrapeMethod = z.infer<typeof scrapeMethodSchema>;
 
 const headersSchema = z.record(z.string(), z.string()).default({});
@@ -90,8 +90,6 @@ export const scheduleSettingsSchema = z
     }
   });
 
-export type ScheduleSettingsInput = z.infer<typeof scheduleSettingsSchema>;
-
 export const aiSettingsSchema = z.object({
   openrouterApiKey: z
     .string()
@@ -100,8 +98,6 @@ export const aiSettingsSchema = z.object({
     .transform((value) => (value && value.trim() ? value.trim() : "")),
   model: z.string().min(1, "Model is required").transform((value) => value.trim()),
 });
-
-export type AiSettingsInput = z.infer<typeof aiSettingsSchema>;
 
 export const ownProductInputSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -121,7 +117,5 @@ export const ownProductInputSchema = z.object({
   shippingCostPerUnit: z.number().min(0).optional(),
   targetMarginPercent: z.number().min(0).max(100).optional(),
 });
-
-export type OwnProductInput = z.infer<typeof ownProductInputSchema>;
 
 export const ownProductUpdateSchema = ownProductInputSchema.partial();

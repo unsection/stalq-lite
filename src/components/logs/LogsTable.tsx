@@ -127,14 +127,14 @@ export const LogsTable = ({ logs }: LogsTableProps) => {
         </table>
       </div>
 
-      <ScrapedHtmlModal
-        open={Boolean(viewingLog)}
-        logId={viewingLog?.id ?? null}
-        productLabel={
-          viewingLog ? `${viewingLog.productName} · ${viewingLog.productDomain}` : ""
-        }
-        onClose={() => setViewingLog(null)}
-      />
+      {viewingLog ? (
+        <ScrapedHtmlModal
+          key={viewingLog.id}
+          logId={viewingLog.id}
+          productLabel={`${viewingLog.productName} · ${viewingLog.productDomain}`}
+          onClose={() => setViewingLog(null)}
+        />
+      ) : null}
     </>
   );
 };

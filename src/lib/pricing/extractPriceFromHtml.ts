@@ -24,7 +24,7 @@ const normalizeCurrency = (value: unknown): string => {
   return "USD";
 };
 
-export const stripHtmlTags = (html: string) =>
+const stripHtmlTags = (html: string) =>
   html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")

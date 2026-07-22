@@ -6,6 +6,7 @@ import type { OwnProduct } from "@/db/schema";
 import { AddOwnProductModal } from "@/components/AddOwnProductModal";
 import { EditOwnProductModal } from "@/components/EditOwnProductModal";
 import { MarginCostsModal } from "@/components/MarginCostsModal";
+import { HomePriceHistoryChart } from "@/components/HomePriceHistoryChart";
 import { ProductInfoCard } from "@/components/ProductInfoCard";
 import { ProductToolbar } from "@/components/ProductToolbar";
 import { PriceTrackerTable } from "@/components/PriceTrackerTable";
@@ -67,6 +68,9 @@ export const ProductWorkspace = ({ ownProducts, competitors }: ProductWorkspaceP
         onEditCosts={() => setCostsOpen(true)}
         onEditProduct={() => setEditOpen(true)}
       />
+      {selected ? (
+        <HomePriceHistoryChart ownProduct={selected} competitors={selectedCompetitors} />
+      ) : null}
       {selected ? <PriceTrackerTable products={selectedCompetitors} ownProduct={selected} /> : null}
       <AddOwnProductModal open={addOpen} onClose={handleCloseAdd} onCreated={handleCreated} />
       <EditOwnProductModal
